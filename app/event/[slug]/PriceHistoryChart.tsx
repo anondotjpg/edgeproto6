@@ -74,7 +74,25 @@ function EndDot(props: EndDotProps) {
       fill={props.stroke}
       stroke="#09090b"
       strokeWidth={2}
-    />
+      opacity={0}
+    >
+      <animate
+        attributeName="opacity"
+        from="0"
+        to="1"
+        dur="0.18s"
+        begin="0.42s"
+        fill="freeze"
+      />
+      <animate
+        attributeName="r"
+        from="1"
+        to="3.5"
+        dur="0.18s"
+        begin="0.42s"
+        fill="freeze"
+      />
+    </circle>
   );
 }
 
@@ -155,6 +173,7 @@ export default function PriceHistoryChart({ slug }: Props) {
         <div className="text-[12px] font-medium uppercase tracking-[0.18em] text-zinc-500">
           History
         </div>
+
         <div className="mt-3 text-[13px] text-zinc-400">
           No price history available yet.
         </div>
@@ -192,6 +211,7 @@ export default function PriceHistoryChart({ slug }: Props) {
                     stroke="rgba(255,255,255,0.08)"
                     vertical={false}
                   />
+
                   <XAxis
                     dataKey="t"
                     type="number"
@@ -203,6 +223,7 @@ export default function PriceHistoryChart({ slug }: Props) {
                     tickLine={false}
                     axisLine={false}
                   />
+
                   <YAxis
                     domain={[0, 1]}
                     tickFormatter={(value) =>
@@ -213,7 +234,9 @@ export default function PriceHistoryChart({ slug }: Props) {
                     axisLine={false}
                     width={44}
                   />
+
                   <Legend />
+
                   <Line
                     type="linear"
                     dataKey="away"
@@ -224,6 +247,7 @@ export default function PriceHistoryChart({ slug }: Props) {
                     activeDot={false}
                     connectNulls
                   />
+
                   <Line
                     type="linear"
                     dataKey="home"
