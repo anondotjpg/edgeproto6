@@ -26,7 +26,7 @@ function getStatusClassName(status: string) {
   }
 
   if (normalizedStatus === "passed") {
-    return "bg-emerald-950/60 text-emerald-400";
+    return "bg-green-950/60 text-green-400";
   }
 
   return "bg-zinc-900 text-zinc-500";
@@ -45,7 +45,6 @@ function AccountSkeletonCard() {
       </div>
 
       <div className="ml-3 flex shrink-0 items-center gap-2">
-        <div className="h-7 w-7 animate-pulse rounded bg-zinc-900" />
         <div className="h-7 w-7 animate-pulse rounded-full bg-zinc-900" />
       </div>
     </div>

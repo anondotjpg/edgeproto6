@@ -5,6 +5,7 @@ import { usePrivy } from "@privy-io/react-auth";
 
 type OwnedAccount = {
   id: string;
+  account_name: string | null;
   plan_key: string;
   plan_size: number;
   one_time_fee: number;
@@ -72,6 +73,24 @@ function getPlanLabel(account: OwnedAccount) {
   return `$${Number(account.plan_size).toLocaleString()}`;
 }
 
+function getAccountDisplayName(account: OwnedAccount) {
+  const accountName = account.account_name?.trim();
+
+  if (accountName) return accountName;
+
+  return getPlanLabel(account);
+}
+
+function getAccountSubLabel(account: OwnedAccount) {
+  const accountName = account.account_name?.trim();
+
+  if (accountName) {
+    return `${getPlanLabel(account)} · ${account.status}`;
+  }
+
+  return account.status;
+}
+
 function getMaxRiskAmount(account: OwnedAccount) {
   return Number(
     account.max_risk_amount ??
@@ -79,28 +98,34 @@ function getMaxRiskAmount(account: OwnedAccount) {
   );
 }
 
-function getDailyLossLimit(account: OwnedAccount) {
-  return Number(
-    account.daily_loss_limit_amount ??
-      Number(account.current_balance ?? account.starting_balance ?? 0) *
-        (Number(account.daily_drawdown_percent ?? 10) / 100)
-  );
+function SkeletonBlock({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded bg-zinc-900 ${className}`} />;
 }
 
-function getTotalLossFloor(account: OwnedAccount) {
-  const start = Number(account.starting_balance ?? account.plan_size ?? 0);
-  const totalLossLimit = Number(
-    account.total_loss_limit_amount ??
-      start * (Number(account.total_drawdown_percent ?? 20) / 100)
-  );
-
-  return start - totalLossLimit;
-}
-
-function getProfitTargetAmount(account: OwnedAccount) {
+function AccountOptionSkeleton() {
   return (
-    Number(account.starting_balance ?? account.plan_size ?? 0) *
-    (1 + Number(account.profit_target_percent ?? 30) / 100)
+    <div className="w-full rounded-2xl border border-zinc-800 bg-black/30 p-4 text-left">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <SkeletonBlock className="h-[17px] w-32 bg-zinc-800" />
+          <SkeletonBlock className="mt-1 h-4 w-24" />
+        </div>
+
+        <div className="mt-0.5 h-4 w-4 shrink-0 animate-pulse rounded-full border border-zinc-700 bg-transparent" />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <div className="text-zinc-500">
+          Available{" "}
+          <SkeletonBlock className="inline-block h-3 w-16 align-middle" />
+        </div>
+
+        <div className="text-zinc-500">
+          Max Bet{" "}
+          <SkeletonBlock className="inline-block h-3 w-16 align-middle" />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -159,19 +184,19 @@ export default function BetSlipModal({
       const active = ["active", "active_dev"].includes(account.status);
 
       if (!active) {
-        return `${getPlanLabel(account)} account is not active.`;
+        return `${getAccountDisplayName(account)} account is not active.`;
       }
 
       const maxRiskAmount = getMaxRiskAmount(account);
 
       if (stake > maxRiskAmount) {
-        return `${getPlanLabel(account)} account max risk per bet is ${formatMoney(
-          maxRiskAmount
-        )}.`;
+        return `${getAccountDisplayName(
+          account
+        )} account max risk per bet is ${formatMoney(maxRiskAmount)}.`;
       }
 
       if (stake > Number(account.current_balance ?? 0)) {
-        return `${getPlanLabel(account)} account only has ${formatMoney(
+        return `${getAccountDisplayName(account)} account only has ${formatMoney(
           account.current_balance
         )} available.`;
       }
@@ -365,7 +390,7 @@ export default function BetSlipModal({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="shrink-0 rounded-full border border-zinc-800 px-3 py-1.5 text-sm text-zinc-400 transition-colors hover:text-white"
+                className="shrink-0 rounded-full border border-zinc-800 px-3 py-1.5 text-sm text-zinc-400 transition-colors hover:text-white cursor-pointer"
               >
                 Close
               </button>
@@ -406,9 +431,7 @@ export default function BetSlipModal({
                     Sign in to select an account.
                   </button>
                 ) : isLoadingAccounts ? (
-                  <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4 text-sm text-zinc-500">
-                    Loading accounts...
-                  </div>
+                  <AccountOptionSkeleton />
                 ) : accounts.length ? (
                   accounts.map((account) => {
                     const selected = selectedAccountIds.includes(account.id);
@@ -417,9 +440,6 @@ export default function BetSlipModal({
                     );
 
                     const maxRiskAmount = getMaxRiskAmount(account);
-                    const dailyLossLimit = getDailyLossLimit(account);
-                    const totalLossFloor = getTotalLossFloor(account);
-                    const target = getProfitTargetAmount(account);
 
                     return (
                       <button
@@ -437,19 +457,19 @@ export default function BetSlipModal({
                         ].join(" ")}
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="text-sm font-semibold text-zinc-100">
-                              {getPlanLabel(account)} Challenge
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-semibold text-zinc-100">
+                              {getAccountDisplayName(account)}
                             </div>
 
                             <div className="mt-1 text-xs text-zinc-500">
-                              {account.status}
+                              {getAccountSubLabel(account)}
                             </div>
                           </div>
 
                           <div
                             className={[
-                              "mt-0.5 h-4 w-4 rounded-full border",
+                              "mt-0.5 h-4 w-4 shrink-0 rounded-full border",
                               selected
                                 ? "border-zinc-100 bg-zinc-100"
                                 : "border-zinc-700",
@@ -469,27 +489,6 @@ export default function BetSlipModal({
                             Max Bet{" "}
                             <span className="font-semibold text-zinc-300">
                               {formatMoney(maxRiskAmount)}
-                            </span>
-                          </div>
-
-                          <div className="text-zinc-500">
-                            Daily Loss{" "}
-                            <span className="font-semibold text-zinc-300">
-                              {formatMoney(dailyLossLimit)}
-                            </span>
-                          </div>
-
-                          <div className="text-zinc-500">
-                            Target{" "}
-                            <span className="font-semibold text-zinc-300">
-                              {formatMoney(target)}
-                            </span>
-                          </div>
-
-                          <div className="col-span-2 text-zinc-500">
-                            Total Loss Floor{" "}
-                            <span className="font-semibold text-zinc-300">
-                              {formatMoney(totalLossFloor)}
                             </span>
                           </div>
                         </div>
@@ -527,16 +526,14 @@ export default function BetSlipModal({
                   className="h-full min-w-0 flex-1 bg-transparent px-2 text-lg font-semibold text-white outline-none placeholder:text-zinc-600"
                 />
               </div>
-            </label>
 
-            <div className="mt-4 rounded-2xl border border-zinc-800 bg-black/30 p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="text-sm text-zinc-400">Possible payout</div>
-                <div className="text-lg font-semibold text-zinc-100">
+              <div className="mt-1 text-right text-[12px] text-zinc-500">
+                pot. payout{" "}
+                <span className="font-semibold text-zinc-300">
                   {possiblePayout}
-                </div>
+                </span>
               </div>
-            </div>
+            </label>
 
             {ruleWarning ? (
               <div className="mt-4 rounded-2xl border border-yellow-950 bg-yellow-950/20 p-3 text-sm text-yellow-200">
@@ -560,7 +557,7 @@ export default function BetSlipModal({
                 !selectedAccountIds.length ||
                 Boolean(ruleWarning)
               }
-              className="mt-5 h-12 w-full rounded-2xl bg-zinc-100 text-[15px] font-semibold text-zinc-950 transition-opacity disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+              className="mt-5 h-12 w-full cursor-pointer rounded-2xl bg-zinc-100 text-[15px] font-semibold text-zinc-950 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isPlacing ? "Placing..." : "Place Bet"}
             </button>

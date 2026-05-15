@@ -168,7 +168,6 @@ function BetCardSkeleton() {
 
       <div className="mt-3 flex items-center justify-between border-t border-zinc-800 pt-3">
         <SkeletonBlock className="h-4 w-24" />
-        <SkeletonBlock className="h-4 w-20" />
       </div>
     </div>
   );

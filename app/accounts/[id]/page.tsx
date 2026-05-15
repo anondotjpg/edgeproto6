@@ -123,8 +123,8 @@ function statusColor(status: string) {
 }
 
 function pnlColor(value: number) {
-  if (value > 0) return "text-emerald-300";
-  if (value < 0) return "text-red-300";
+  if (value > 0) return "text-green-400";
+  if (value < 0) return "text-red-400";
   return "text-zinc-100";
 }
 
@@ -505,7 +505,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
       <div className="mx-auto w-full max-w-5xl md:py-16">
         <div className="mb-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Account Situation
+            Account Overview
           </p>
 
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-100 sm:text-4xl">
