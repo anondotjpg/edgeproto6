@@ -303,11 +303,11 @@ export default function AccountsPage() {
           <div className="mx-auto w-full max-w-[1480px] px-5 py-8 pb-24 sm:px-6 md:pb-8">
             <OwnedAccountsSection />
 
-            <div className="mb-7 sm:mb-10 text-center">
-              <h1 className="text-[30px] font-semibold tracking-tight text-zinc-100 sm:text-[38px] italic">
+            <div className="mb-7 sm:mb-10 text-center hidden md:block">
+              <h1 className="text-[30px] font-semibold tracking-tight text-zinc-100 sm:text-[38px] italic ">
                 Find Your Edge
               </h1>
-              <p className="text-[15px] text-zinc-500 sm:text-[16px] hidden md:block">
+              <p className="text-[15px] text-zinc-500 sm:text-[16px]">
                 Place your bets.
               </p>
             </div>
