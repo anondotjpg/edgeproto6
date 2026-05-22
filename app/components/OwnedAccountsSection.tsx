@@ -347,7 +347,7 @@ export default function OwnedAccountsSection() {
                         </div>
                       </div>
 
-                      <div className="mt-1 text-[12px] leading-none text-zinc-500">
+                      <div className="mt-[6px] text-[12px] leading-none text-zinc-500">
                         {accountName
                           ? `${sizeLabel} · Fee ${feeLabel}`
                           : `Fee ${feeLabel}`}
