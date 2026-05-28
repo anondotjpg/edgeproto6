@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
 import { usePrivy } from "@privy-io/react-auth";
 
 type OwnedAccount = {
@@ -391,6 +392,10 @@ export default function BetSlipModal({
       if (!response.ok) {
         throw new Error(data?.error || "Unable to place bet.");
       }
+
+      toast("Bet placed", {
+        description: `${formatMoney(stake)} on ${team}`,
+      });
 
       setOpen(false);
       setAmount("");

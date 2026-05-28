@@ -4,6 +4,7 @@ import "./globals.css";
 import AppSidebar from "./components/AppSidebar";
 import TopRightAuth from "./components/TopRightAuth";
 import Providers from "./providers";
+import ResponsiveToaster from "./components/ResponsiveToaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,7 +58,6 @@ export default function RootLayout({
         />
 
         <link rel="apple-touch-icon" href="/apple-icon.png" />
-
         <link rel="apple-touch-startup-image" href="/splash.png" />
       </head>
 
@@ -97,6 +97,8 @@ export default function RootLayout({
           <main className="min-h-screen bg-[#09090b] md:pl-[220px]">
             {children}
           </main>
+
+          <ResponsiveToaster />
         </Providers>
       </body>
     </html>
