@@ -16,7 +16,7 @@ export default function AppSidebar() {
 
   return (
     <>
-      <aside className="fixed left-0 top-0 z-[999] hidden h-screen w-[220px] bg-[#09090b] md:block">
+      <aside className="fixed left-0 top-0 hidden h-screen w-[220px] bg-[#09090b] md:block">
         <div className="flex h-full w-full flex-col border-r border-zinc-800 bg-[#09090b] px-6">
           <div className="pt-5">
             <div className="flex items-center">
@@ -33,11 +33,7 @@ export default function AppSidebar() {
 
           <nav className="mt-10 flex flex-col gap-4">
             {NAV_LINKS.map((item) => {
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
+              const isActive = pathname === item.href;
 
               return (
                 <Link
@@ -57,35 +53,29 @@ export default function AppSidebar() {
         </div>
       </aside>
 
-      <nav className="fixed inset-x-0 bottom-0 z-[999] border-t border-zinc-800 bg-[#09090b]/95 backdrop-blur md:hidden">
-        <div className="px-4">
-          <div className="mx-auto grid h-16 max-w-md grid-cols-4">
-            {NAV_LINKS.map((item) => {
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800 bg-[#09090b]/95 backdrop-blur md:hidden">
+        <div className="grid h-16 grid-cols-4 px-[10%]">
+          {NAV_LINKS.map((item) => {
+            const isActive = pathname === item.href;
 
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="flex h-full w-full items-center justify-center outline-none focus:outline-none focus-visible:outline-none"
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="flex items-center justify-center px-2 outline-none focus:outline-none focus-visible:outline-none"
+              >
+                <span
+                  className={
+                    isActive
+                      ? "rounded-md text-[15px] font-semibold text-zinc-100"
+                      : "rounded-md text-[15px] font-medium text-zinc-500"
+                  }
                 >
-                  <span
-                    className={
-                      isActive
-                        ? "rounded-md text-[15px] font-semibold text-zinc-100"
-                        : "rounded-md text-[15px] font-medium text-zinc-500"
-                    }
-                  >
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </>

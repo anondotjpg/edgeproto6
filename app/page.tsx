@@ -1,4 +1,3 @@
-import * as React from "react";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { FiArrowUpRight } from "react-icons/fi";
@@ -58,14 +57,6 @@ type ApiResponse = {
   error?: string;
 };
 
-type DotPatternProps = React.SVGProps<SVGSVGElement> & {
-  width?: number;
-  height?: number;
-  cx?: number;
-  cy?: number;
-  cr?: number;
-};
-
 const LEAGUES = [
   { label: "NBA", tag: 745, league: "nba" },
   { label: "NHL", tag: 899, league: "nhl" },
@@ -73,45 +64,6 @@ const LEAGUES = [
 ] as const;
 
 type LeagueKey = (typeof LEAGUES)[number]["league"];
-
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
-
-function DotPattern({
-  width = 18,
-  height = 18,
-  cx = 1,
-  cy = 1,
-  cr = 1,
-  className,
-  ...props
-}: DotPatternProps) {
-  const patternId = React.useId();
-
-  return (
-    <svg
-      aria-hidden="true"
-      className={cn("pointer-events-none fill-zinc-700/80", className)}
-      {...props}
-    >
-      <defs>
-        <pattern
-          id={patternId}
-          width={width}
-          height={height}
-          patternUnits="userSpaceOnUse"
-          x="0"
-          y="0"
-        >
-          <circle cx={cx} cy={cy} r={cr} />
-        </pattern>
-      </defs>
-
-      <rect width="100%" height="100%" fill={`url(#${patternId})`} />
-    </svg>
-  );
-}
 
 async function getOdds(): Promise<ApiResponse> {
   const headerStore = await headers();
@@ -278,7 +230,10 @@ function GameCard({ game }: { game: Game }) {
             isTop
           />
 
-          <OddsCell value={formatPrice(homeMoneyline?.price)} href={eventHref} />
+          <OddsCell
+            value={formatPrice(homeMoneyline?.price)}
+            href={eventHref}
+          />
         </div>
       </div>
 
@@ -347,19 +302,8 @@ export default async function Home({
         }
       `}</style>
 
-      <div className="relative min-h-screen bg-[#09090b] text-white">
-        <div className="pointer-events-none fixed inset-y-0 right-0 z-0 hidden overflow-hidden bg-[#09090b] md:left-[220px] md:block">
-          <DotPattern
-            width={18}
-            height={18}
-            cx={1}
-            cy={1}
-            cr={1}
-            className="absolute inset-0 h-full w-full opacity-70 [mask-image:radial-gradient(900px_circle_at_center,white,transparent)]"
-          />
-        </div>
-
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-6 sm:py-6 md:pb-6">
+      <div className="min-h-screen bg-[#09090b] text-white">
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-6 sm:py-6 md:pb-6">
           <header>
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <div className="min-w-0 flex-1">
