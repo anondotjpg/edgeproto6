@@ -230,10 +230,7 @@ function GameCard({ game }: { game: Game }) {
             isTop
           />
 
-          <OddsCell
-            value={formatPrice(homeMoneyline?.price)}
-            href={eventHref}
-          />
+          <OddsCell value={formatPrice(homeMoneyline?.price)} href={eventHref} />
         </div>
       </div>
 
@@ -302,8 +299,24 @@ export default async function Home({
         }
       `}</style>
 
-      <div className="min-h-screen bg-[#09090b] text-white">
-        <div className="mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-6 sm:py-6 md:pb-6">
+      <div className="relative min-h-screen bg-[#09090b] text-white">
+        <div
+          className="pointer-events-none fixed inset-y-0 right-0 z-[1] hidden overflow-hidden md:left-[220px] md:block"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, rgba(161, 161, 170, 0.55) 1px, transparent 1px)",
+            backgroundSize: "18px 18px",
+            backgroundPosition: "0 0",
+            maskImage:
+              "radial-gradient(900px circle at center, white, transparent)",
+            WebkitMaskImage:
+              "radial-gradient(900px circle at center, white, transparent)",
+          }}
+        >
+          <div className="absolute inset-0 bg-[#09090b]/35" />
+        </div>
+
+        <div className="relative z-[2] mx-auto w-full max-w-7xl px-4 py-5 pb-24 sm:px-6 sm:py-6 md:pb-6">
           <header>
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <div className="min-w-0 flex-1">
