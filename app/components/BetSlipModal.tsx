@@ -315,6 +315,15 @@ export default function BetSlipModal({
     );
   }
 
+  function handleAmountChange(value: string) {
+    const parsed = parseAmount(value);
+    const digitsOnly = parsed.replace(/\D/g, "");
+
+    if (digitsOnly.length <= 6) {
+      setAmount(parsed);
+    }
+  }
+
   async function placeBet() {
     if (!ready) return;
 
@@ -561,11 +570,10 @@ export default function BetSlipModal({
                 <span className="text-zinc-500">$</span>
                 <input
                   value={amount}
-                  onChange={(event) =>
-                    setAmount(parseAmount(event.target.value))
-                  }
+                  onChange={(event) => handleAmountChange(event.target.value)}
                   placeholder="0.00"
                   inputMode="decimal"
+                  maxLength={7}
                   className="h-full min-w-0 flex-1 bg-transparent px-2 text-lg font-semibold text-white outline-none placeholder:text-zinc-600"
                 />
               </div>
