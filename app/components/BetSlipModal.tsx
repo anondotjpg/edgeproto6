@@ -49,6 +49,16 @@ type BetSlipModalProps = {
   polymarketTokenId?: string | null;
 };
 
+const ACCOUNT_GRID_CLASS = "grid grid-cols-3 gap-3";
+
+const ACCOUNT_CARD_CLASS =
+  "h-[92px] overflow-hidden rounded-2xl border p-3 text-left transition-colors";
+
+const ACCOUNT_SELECT_SHELL_CLASS = "mt-5 h-[246px]";
+
+const ACCOUNT_LIST_CLASS =
+  "mt-3 h-[216px] overflow-y-scroll pr-1 [scrollbar-gutter:stable]";
+
 function parseAmount(value: string) {
   const normalized = value.replace(/[^0-9.]/g, "");
   const parts = normalized.split(".");
@@ -69,6 +79,17 @@ function formatMoney(value: number | null | undefined) {
   })}`;
 }
 
+function formatCompactMoney(value: number | null | undefined) {
+  const safeValue = Number(value ?? 0);
+
+  if (Math.abs(safeValue) >= 1000) {
+    const compact = safeValue / 1000;
+    return `$${compact.toFixed(safeValue % 1000 === 0 ? 0 : 1)}k`;
+  }
+
+  return `$${safeValue.toFixed(0)}`;
+}
+
 function getPlanLabel(account: OwnedAccount) {
   return `$${Number(account.plan_size).toLocaleString()}`;
 }
@@ -81,7 +102,7 @@ function getAccountDisplayName(account: OwnedAccount) {
   return getPlanLabel(account);
 }
 
-function getAccountSubLabel(account: OwnedAccount) {
+function getAccountMeta(account: OwnedAccount) {
   const accountName = account.account_name?.trim();
 
   if (accountName) {
@@ -104,25 +125,24 @@ function SkeletonBlock({ className = "" }: { className?: string }) {
 
 function AccountOptionSkeleton() {
   return (
-    <div className="w-full rounded-2xl border border-zinc-800 bg-black/30 p-4 text-left">
-      <div className="flex items-start justify-between gap-3">
+    <div className={`${ACCOUNT_CARD_CLASS} border-zinc-800 bg-black/30`}>
+      <div className="flex h-5 items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <SkeletonBlock className="h-[17px] w-32 bg-zinc-800" />
-          <SkeletonBlock className="mt-1 h-4 w-24" />
+          <SkeletonBlock className="h-5 w-full max-w-[150px] bg-zinc-800" />
         </div>
 
-        <div className="mt-0.5 h-4 w-4 shrink-0 animate-pulse rounded-full border border-zinc-700 bg-transparent" />
+        <div className="mt-1 h-3.5 w-3.5 shrink-0 animate-pulse rounded-full border border-zinc-700 bg-transparent" />
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <div className="text-zinc-500">
-          Available{" "}
-          <SkeletonBlock className="inline-block h-3 w-16 align-middle" />
+      <div className="mt-3 space-y-1.5 text-[12px] leading-4">
+        <div className="flex h-4 items-center justify-between gap-2">
+          <SkeletonBlock className="h-3 w-8" />
+          <SkeletonBlock className="h-3 w-10" />
         </div>
 
-        <div className="text-zinc-500">
-          Max Bet{" "}
-          <SkeletonBlock className="inline-block h-3 w-16 align-middle" />
+        <div className="flex h-4 items-center justify-between gap-2">
+          <SkeletonBlock className="h-3 w-6" />
+          <SkeletonBlock className="h-3 w-10" />
         </div>
       </div>
     </div>
@@ -205,11 +225,30 @@ export default function BetSlipModal({
     return null;
   }, [selectedAccounts, stake]);
 
+  function openBetSlip() {
+    setOpen(true);
+    setError(null);
+
+    if (!ready || authenticated) {
+      setIsLoadingAccounts(true);
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
     async function loadAccounts() {
-      if (!open || !ready || !authenticated) return;
+      if (!open) return;
+
+      if (!ready) {
+        setIsLoadingAccounts(true);
+        return;
+      }
+
+      if (!authenticated) {
+        setIsLoadingAccounts(false);
+        return;
+      }
 
       try {
         setIsLoadingAccounts(true);
@@ -356,7 +395,7 @@ export default function BetSlipModal({
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openBetSlip}
         className="flex min-h-[56px] min-w-[104px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-zinc-800 bg-transparent px-4 py-3 text-center transition-colors hover:bg-zinc-900"
       >
         <div className="text-[20px] font-semibold tracking-tight text-zinc-100">
@@ -373,7 +412,7 @@ export default function BetSlipModal({
             onClick={() => setOpen(false)}
           />
 
-          <div className="relative w-full max-w-md rounded-[28px] border border-zinc-800 bg-zinc-950 p-5 text-white shadow-2xl">
+          <div className="relative w-full max-w-2xl rounded-[28px] border border-zinc-800 bg-zinc-950 p-5 text-white shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
@@ -384,13 +423,15 @@ export default function BetSlipModal({
                   {team}
                 </h2>
 
-                <p className="mt-1 text-sm text-zinc-400">{matchup}</p>
+                <p className="mt-1 truncate text-sm text-zinc-400">
+                  {matchup}
+                </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="shrink-0 rounded-full border border-zinc-800 px-3 py-1.5 text-sm text-zinc-400 transition-colors hover:text-white cursor-pointer"
+                className="shrink-0 cursor-pointer rounded-full border border-zinc-800 px-3 py-1.5 text-sm text-zinc-400 transition-colors hover:text-white"
               >
                 Close
               </button>
@@ -416,93 +457,92 @@ export default function BetSlipModal({
               </div>
             </div>
 
-            <div className="mt-5">
-              <div className="text-sm font-medium text-zinc-300">
+            <div className={ACCOUNT_SELECT_SHELL_CLASS}>
+              <div className="h-[18px] text-sm font-medium leading-[18px] text-zinc-300">
                 Select account
               </div>
 
-              <div className="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1">
-                {!authenticated ? (
+              <div className={ACCOUNT_LIST_CLASS}>
+                {!ready || isLoadingAccounts ? (
+                  <div className={ACCOUNT_GRID_CLASS}>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <AccountOptionSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : !authenticated ? (
                   <button
                     type="button"
                     onClick={login}
-                    className="w-full rounded-2xl border border-zinc-800 bg-black/30 p-4 text-left text-sm text-zinc-300"
+                    className="h-full w-full rounded-2xl border border-zinc-800 bg-black/30 p-4 text-left text-sm text-zinc-300"
                   >
                     Sign in to select an account.
                   </button>
-                ) : isLoadingAccounts ? (
-                  <AccountOptionSkeleton />
                 ) : accounts.length ? (
-                  accounts.map((account) => {
-                    const selected = selectedAccountIds.includes(account.id);
-                    const active = ["active", "active_dev"].includes(
-                      account.status
-                    );
+                  <div className={ACCOUNT_GRID_CLASS}>
+                    {accounts.map((account) => {
+                      const selected = selectedAccountIds.includes(account.id);
+                      const active = ["active", "active_dev"].includes(
+                        account.status
+                      );
 
-                    const maxRiskAmount = getMaxRiskAmount(account);
+                      const maxRiskAmount = getMaxRiskAmount(account);
 
-                    return (
-                      <button
-                        key={account.id}
-                        type="button"
-                        onClick={() => {
-                          if (active) toggleAccount(account.id);
-                        }}
-                        disabled={!active}
-                        className={[
-                          "w-full rounded-2xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-                          selected
-                            ? "border-zinc-500 bg-zinc-900"
-                            : "border-zinc-800 bg-black/30 hover:border-zinc-700",
-                        ].join(" ")}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-semibold text-zinc-100">
+                      return (
+                        <button
+                          key={account.id}
+                          type="button"
+                          onClick={() => {
+                            if (active) toggleAccount(account.id);
+                          }}
+                          disabled={!active}
+                          className={[
+                            ACCOUNT_CARD_CLASS,
+                            "disabled:cursor-not-allowed disabled:opacity-50",
+                            selected
+                              ? "border-zinc-400 bg-zinc-900"
+                              : "border-zinc-800 bg-black/30 hover:border-zinc-700",
+                          ].join(" ")}
+                        >
+                          <div className="flex h-5 items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-5 text-zinc-100">
                               {getAccountDisplayName(account)}
+                              <span className="font-normal text-zinc-500">
+                                {" "}
+                                · {getAccountMeta(account)}
+                              </span>
                             </div>
 
-                            <div className="mt-1 text-xs text-zinc-500">
-                              {getAccountSubLabel(account)}
+                            <div
+                              className={[
+                                "mt-1 h-3.5 w-3.5 shrink-0 rounded-full border",
+                                selected
+                                  ? "border-zinc-100 bg-zinc-100"
+                                  : "border-zinc-700",
+                              ].join(" ")}
+                            />
+                          </div>
+
+                          <div className="mt-3 space-y-1.5 text-[12px] leading-4">
+                            <div className="flex h-4 items-center justify-between gap-2">
+                              <span className="text-zinc-500">Avail</span>
+                              <span className="font-medium text-zinc-300">
+                                {formatCompactMoney(account.current_balance)}
+                              </span>
+                            </div>
+
+                            <div className="flex h-4 items-center justify-between gap-2">
+                              <span className="text-zinc-500">Max</span>
+                              <span className="font-medium text-zinc-300">
+                                {formatCompactMoney(maxRiskAmount)}
+                              </span>
                             </div>
                           </div>
-
-                          <div
-                            className={[
-                              "mt-0.5 h-4 w-4 shrink-0 rounded-full border",
-                              selected
-                                ? "border-zinc-100 bg-zinc-100"
-                                : "border-zinc-700",
-                            ].join(" ")}
-                          />
-                        </div>
-
-                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                          <div className="text-zinc-500">
-                            Available{" "}
-                            <span className="font-semibold text-zinc-300">
-                              {formatMoney(account.current_balance)}
-                            </span>
-                          </div>
-
-                          <div className="text-zinc-500">
-                            Max Bet{" "}
-                            <span className="font-semibold text-zinc-300">
-                              {formatMoney(maxRiskAmount)}
-                            </span>
-                          </div>
-                        </div>
-
-                        {account.failure_reason ? (
-                          <div className="mt-2 text-xs text-red-300">
-                            {account.failure_reason}
-                          </div>
-                        ) : null}
-                      </button>
-                    );
-                  })
+                        </button>
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4 text-sm text-zinc-500">
+                  <div className="flex h-full items-center rounded-2xl border border-zinc-800 bg-black/30 p-4 text-sm text-zinc-500">
                     No accounts found. Start a challenge first.
                   </div>
                 )}
@@ -535,17 +575,17 @@ export default function BetSlipModal({
               </div>
             </label>
 
-            {ruleWarning ? (
-              <div className="mt-4 rounded-2xl border border-yellow-950 bg-yellow-950/20 p-3 text-sm text-yellow-200">
-                {ruleWarning}
-              </div>
-            ) : null}
-
-            {error ? (
-              <div className="mt-4 rounded-2xl border border-red-950 bg-red-950/20 p-3 text-sm text-red-300">
-                {error}
-              </div>
-            ) : null}
+            <div className="mt-4 min-h-[46px]">
+              {ruleWarning ? (
+                <div className="rounded-2xl border border-yellow-950 bg-yellow-950/20 p-3 text-sm text-yellow-200">
+                  {ruleWarning}
+                </div>
+              ) : error ? (
+                <div className="rounded-2xl border border-red-950 bg-red-950/20 p-3 text-sm text-red-300">
+                  {error}
+                </div>
+              ) : null}
+            </div>
 
             <button
               type="button"
