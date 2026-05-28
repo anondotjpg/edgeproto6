@@ -25,6 +25,27 @@ type SyncResult = {
   reason?: string;
 };
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Unknown sync error.";
+  }
+}
+
 function isAuthorizedCronRequest(req: Request) {
   const cronSecret = process.env.CRON_SECRET;
 
@@ -177,8 +198,13 @@ async function runPolymarketSettlementSync(req: Request) {
           result: settleResult,
         });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Unknown sync error.";
+        const message = getErrorMessage(error);
+
+        console.error("[cron-polymarket-sync] Bet sync error:", {
+          betId: bet.id,
+          message,
+          error,
+        });
 
         await supabaseAdmin
           .from("bets")
@@ -214,10 +240,13 @@ async function runPolymarketSettlementSync(req: Request) {
           action: "rules_evaluated",
         });
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Unknown rule evaluation error.";
+        const message = getErrorMessage(error);
+
+        console.error("[cron-polymarket-sync] Rule evaluation error:", {
+          accountId,
+          message,
+          error,
+        });
 
         results.push({
           accountId,
@@ -237,14 +266,16 @@ async function runPolymarketSettlementSync(req: Request) {
       results,
     });
   } catch (error) {
-    console.error("Polymarket settlement sync error:", error);
+    const message = getErrorMessage(error);
+
+    console.error("Polymarket settlement sync error:", {
+      message,
+      error,
+    });
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to sync Polymarket settlements.",
+        error: message || "Unable to sync Polymarket settlements.",
       },
       { status: 500 }
     );
