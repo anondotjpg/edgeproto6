@@ -54,10 +54,9 @@ const ACCOUNT_GRID_CLASS = "grid grid-cols-3 gap-3";
 const ACCOUNT_CARD_CLASS =
   "h-[92px] overflow-hidden rounded-2xl border p-3 text-left transition-colors";
 
-const ACCOUNT_SELECT_SHELL_CLASS = "mt-5 h-[246px]";
+const ACCOUNT_SELECT_SHELL_CLASS = "mt-5 h-[122px]";
 
-const ACCOUNT_LIST_CLASS =
-  "mt-3 h-[216px] overflow-y-scroll pr-1 [scrollbar-gutter:stable]";
+const ACCOUNT_LIST_CLASS = "mt-3 h-[92px] overflow-hidden";
 
 function parseAmount(value: string) {
   const normalized = value.replace(/[^0-9.]/g, "");
