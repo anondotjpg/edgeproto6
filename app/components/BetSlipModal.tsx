@@ -614,7 +614,7 @@ function BetSlipContent({
           !selectedAccountIds.length ||
           Boolean(ruleWarning)
         }
-        className="mt-5 h-12 w-full cursor-pointer rounded-2xl bg-zinc-100 text-[15px] font-semibold text-zinc-950 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-5 mb-3 h-14 w-full cursor-pointer rounded-2xl bg-zinc-100 text-[16px] font-semibold text-zinc-950 transition-opacity disabled:cursor-not-allowed disabled:opacity-40 md:mb-0 md:h-12 md:text-[15px]"
       >
         {isPlacing ? "Placing..." : "Place Bet"}
       </button>
