@@ -43,12 +43,6 @@ function formatSignedMoney(value: number | null | undefined) {
   return `${prefix}${formatMoney(safeValue)}`;
 }
 
-function formatPercent(value: number | null | undefined) {
-  return `${Number(value ?? 0).toLocaleString(undefined, {
-    maximumFractionDigits: 2,
-  })}%`;
-}
-
 function formatOdds(odds: number | null | undefined) {
   const safeOdds = Number(odds ?? 0);
   return safeOdds > 0 ? `+${safeOdds}` : `${safeOdds}`;
@@ -542,115 +536,75 @@ export default async function AccountPage({ params }: AccountPageProps) {
 
   const pageTitle = accountName || `${fallbackAccountTitle} Challenge`;
 
-  const remainingToTarget = Math.max(profitTargetBalance - ruleEquity, 0);
   const dailyRoom = ruleEquity - dailyFloor;
   const totalRoom = ruleEquity - totalFloor;
 
   const accountStatus = String(account.status);
-  const isPassed = accountStatus === "passed";
   const isAccountFailed = accountStatus === "failed";
 
   return (
     <div className="min-h-screen bg-[#09090b] px-4 pb-24 pt-6 text-white sm:px-6 md:pb-12 md:pt-10">
       <div className="mx-auto mt-4 w-full max-w-6xl sm:mt-5">
-        <section className="h-[496px] rounded-[32px] bg-zinc-950/90 p-5 sm:h-[556px] sm:p-7 lg:h-[316px]">
-          <div className="grid h-full grid-rows-[224px_224px] gap-2 sm:grid-rows-[260px_224px] sm:gap-4 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:grid-rows-1 lg:items-center lg:gap-7">
-            <div className="min-h-0 min-w-0 self-center overflow-visible">
-              <div className="h-[46px] sm:h-[62px]">
-                <h1 className="truncate pb-1 text-[34px] font-semibold leading-[1.1] tracking-tight text-zinc-100 sm:text-[54px]">
+        <section className="rounded-[32px] bg-zinc-950/90 p-4 sm:p-5">
+          <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)]">
+            <div className="flex h-[142px] min-w-0 flex-col justify-between overflow-hidden lg:h-[146px]">
+              <div className="min-w-0">
+                <h1 className="truncate pb-1 text-[29px] font-semibold leading-[1.08] tracking-tight text-zinc-100 sm:text-[34px] lg:text-[36px]">
                   {pageTitle}
                 </h1>
-              </div>
 
-              <div className="mt-4 sm:mt-5">
-                <div className="text-[13px] font-medium text-zinc-500">
+                <div className="mt-3 text-[12px] font-medium leading-none text-zinc-500">
                   Rule equity
                 </div>
 
-                <div className="mt-1 h-[72px] sm:h-[92px]">
-                  <div className="truncate pb-1 text-[58px] font-semibold leading-[1.08] tracking-tight text-zinc-100 sm:text-[76px]">
+                <div className="mt-2 flex min-w-0 items-end gap-3">
+                  <div className="min-w-0 truncate pb-1 text-[36px] font-semibold leading-[1.04] tracking-tight text-zinc-100 sm:text-[42px] lg:text-[44px]">
                     {formatMoney(ruleEquity)}
                   </div>
-                </div>
 
-                <div className="mt-[2px] text-[13px] font-medium text-zinc-500">
-                  {formatMoney(currentBalance)} available
-                </div>
-
-                <div className="mt-3 flex h-8 flex-wrap gap-2 text-[13px] sm:mt-4">
-                  <span className="rounded-full bg-black/30 px-3 py-1.5 text-zinc-400 ring-1 ring-zinc-900">
-                    {openBets.length} open
-                  </span>
-
-                  <span className="rounded-full bg-black/30 px-3 py-1.5 text-zinc-400 ring-1 ring-zinc-900">
-                    {pastBets.length} settled
-                  </span>
-
-                  <span
+                  <div
                     className={[
-                      "rounded-full bg-black/30 px-3 py-1.5 ring-1 ring-zinc-900",
+                      "mb-2 shrink-0 text-[12px] font-medium leading-none sm:mb-2.5",
                       pnlColor(realizedPnl),
                     ].join(" ")}
                   >
                     {formatSignedMoney(realizedPnl)} realized
-                  </span>
+                  </div>
+                </div>
+
+                <div className="mt-1 truncate text-[13px] font-medium leading-none text-zinc-500">
+                  {formatMoney(currentBalance)} available
                 </div>
               </div>
             </div>
 
-            <div className="h-[224px] rounded-[26px] bg-black/30 p-5 ring-1 ring-zinc-900">
-              <div className="grid h-full grid-rows-[28px_64px_64px] gap-y-[14px]">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="text-[13px] font-medium leading-none text-zinc-500">
-                    Goal
-                  </div>
-
-                  <div
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${accountStatusClassName()}`}
-                  >
-                    {resultLabel(accountStatus)}
-                  </div>
+            <div className="flex h-[142px] flex-col justify-between rounded-[26px] bg-black/30 p-5 ring-1 ring-zinc-900 lg:h-[146px]">
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-[13px] font-medium leading-none text-zinc-500">
+                  Goal
                 </div>
 
-                <div className="min-w-0 self-center">
-                  <div className="truncate pb-1 text-[38px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[42px] lg:text-[34px]">
-                    {formatMoney(ruleEquity)}
-                  </div>
+                <div
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${accountStatusClassName()}`}
+                >
+                  {resultLabel(accountStatus)}
+                </div>
+              </div>
 
-                  <div className="mt-2 truncate text-[13px] font-medium leading-none text-zinc-500">
-                    of {formatMoney(profitTargetBalance)} goal
-                  </div>
+              <div className="min-w-0">
+                <div className="truncate pb-1 text-[32px] font-semibold leading-[1.12] tracking-tight text-zinc-100 sm:text-[36px] lg:text-[38px]">
+                  {formatMoney(ruleEquity)}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex min-w-0 flex-col justify-center rounded-2xl bg-zinc-950/70 px-3 ring-1 ring-zinc-900">
-                    <div className="text-[11px] leading-none text-zinc-600">
-                      Remaining
-                    </div>
-
-                    <div className="mt-2 truncate text-[15px] font-semibold leading-none text-zinc-100">
-                      {isPassed || remainingToTarget <= 0
-                        ? "$0.00"
-                        : formatMoney(remainingToTarget)}
-                    </div>
-                  </div>
-
-                  <div className="flex min-w-0 flex-col justify-center rounded-2xl bg-zinc-950/70 px-3 ring-1 ring-zinc-900">
-                    <div className="text-[11px] leading-none text-zinc-600">
-                      Target
-                    </div>
-
-                    <div className="mt-2 truncate text-[15px] font-semibold leading-none text-zinc-100">
-                      {formatPercent(profitTargetPercent)}
-                    </div>
-                  </div>
+                <div className="truncate text-[13px] font-medium leading-[1.35] text-zinc-500">
+                  of {formatMoney(profitTargetBalance)} goal
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mt-2 grid h-[196px] grid-cols-2 gap-2 sm:mt-3 sm:h-[224px] sm:gap-3 lg:h-[106px] lg:grid-cols-4">
+        <section className="mt-3 grid h-[196px] grid-cols-2 gap-2 sm:h-[224px] sm:gap-3 lg:h-[106px] lg:grid-cols-4">
           <MetricCard
             label="Rule equity"
             value={formatMoney(ruleEquity)}
