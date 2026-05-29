@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { usePrivy } from "@privy-io/react-auth";
@@ -89,6 +89,47 @@ function useIsMobile() {
   }, []);
 
   return isMobile;
+}
+
+function useKeyboardAwareDrawer(active: boolean) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!active) return;
+
+    const vv = window.visualViewport;
+    const el = contentRef.current;
+    if (!vv || !el) return;
+
+    function update() {
+      // How much of the layout viewport the keyboard is covering.
+      const keyboardHeight = Math.max(
+        0,
+        window.innerHeight - vv.height - vv.offsetTop
+      );
+
+      // Lift the drawer so its bottom edge sits right on top of the keyboard.
+      el.style.bottom = `${keyboardHeight}px`;
+
+      // Keep the whole drawer inside the *visible* area so it can scroll
+      // instead of hiding content behind the keyboard.
+      el.style.setProperty("max-height", `${vv.height}px`, "important");
+    }
+
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      // Reset so the closed drawer / next open starts clean.
+      el.style.bottom = "";
+      el.style.removeProperty("max-height");
+    };
+  }, [active]);
+
+  return contentRef;
 }
 
 function parseAmount(value: string) {
@@ -405,6 +446,12 @@ function BetSlipContent({
           <input
             value={amount}
             onChange={(event) => onAmountChange(event.target.value)}
+            onFocus={(event) => {
+              const target = event.target;
+              setTimeout(() => {
+                target.scrollIntoView({ block: "center", behavior: "smooth" });
+              }, 300);
+            }}
             placeholder="0.00"
             inputMode="decimal"
             maxLength={7}
@@ -490,6 +537,9 @@ export default function BetSlipModal({
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
   const [isPlacing, setIsPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Only run the visualViewport listener when the mobile drawer is open.
+  const drawerContentRef = useKeyboardAwareDrawer(open && isMobile);
 
   const numericOdds = parseOdds(odds);
   const stake = Number(amount);
@@ -791,7 +841,10 @@ export default function BetSlipModal({
           onOpenChange={handleOpenChange}
           repositionInputs={false}
         >
-          <DrawerContent className="overflow-visible border-zinc-800 bg-zinc-950 text-white outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 data-[state=open]:outline-none data-[vaul-drawer-direction=bottom]:max-h-none after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-[140svh] after:bg-zinc-950 after:content-[''] before:pointer-events-none before:absolute before:inset-x-0 before:top-[calc(100%-1px)] before:h-[140svh] before:bg-zinc-950 before:content-['']">
+          <DrawerContent
+            ref={drawerContentRef}
+            className="overflow-visible border-zinc-800 bg-zinc-950 text-white outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 data-[state=open]:outline-none after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-[140svh] after:bg-zinc-950 after:content-[''] before:pointer-events-none before:absolute before:inset-x-0 before:top-[calc(100%-1px)] before:h-[140svh] before:bg-zinc-950 before:content-['']"
+          >
             <DrawerHeader className="sr-only">
               <DrawerTitle>Place Bet</DrawerTitle>
               <DrawerDescription>
@@ -799,10 +852,10 @@ export default function BetSlipModal({
               </DrawerDescription>
             </DrawerHeader>
 
-            <div className="mx-auto w-full max-w-2xl px-5 pb-[max(18px,env(safe-area-inset-bottom))] pt-2">
-              <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-zinc-800" />
+            <div className="mx-auto flex max-h-full w-full max-w-2xl flex-col px-5 pb-[max(18px,env(safe-area-inset-bottom))] pt-2">
+              <div className="mx-auto mb-5 h-1.5 w-12 shrink-0 rounded-full bg-zinc-800" />
 
-              <div className="max-h-[calc(100svh-92px)] overflow-y-auto overscroll-contain pb-1">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-1">
                 {content}
               </div>
             </div>
