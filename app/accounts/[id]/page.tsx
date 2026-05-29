@@ -608,7 +608,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
                 </div>
 
                 <div className="min-w-0 self-center">
-                  <div className="truncate pb-1 text-[32px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[36px]">
+                  <div className="truncate pb-1 text-[22px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[28px]">
                     {formatMoney(ruleEquity)}
                   </div>
 
