@@ -547,9 +547,9 @@ export default async function AccountPage({ params }: AccountPageProps) {
 
   return (
     <div className="min-h-screen bg-[#09090b] px-4 pb-24 pt-6 text-white sm:px-6 md:pb-12 md:pt-10">
-      <div className="mx-auto mt-5 w-full max-w-6xl sm:mt-6">
-        <section className="h-[456px] rounded-[32px] bg-zinc-950/90 p-5 sm:h-[508px] sm:p-7 lg:h-[330px]">
-          <div className="grid h-full grid-rows-[220px_180px] gap-4 sm:grid-rows-[252px_180px] sm:gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:grid-rows-1 lg:items-center lg:gap-7">
+      <div className="mx-auto mt-4 w-full max-w-6xl sm:mt-5">
+        <section className="h-[452px] rounded-[32px] bg-zinc-950/90 p-5 sm:h-[500px] sm:p-7 lg:h-[316px]">
+          <div className="grid h-full grid-rows-[220px_188px] gap-1 sm:grid-rows-[236px_188px] sm:gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:grid-rows-1 lg:items-center lg:gap-7">
             <div className="min-h-0 min-w-0 self-center overflow-visible">
               <div className="h-[46px] sm:h-[62px]">
                 <h1 className="truncate pb-1 text-[34px] font-semibold leading-[1.1] tracking-tight text-zinc-100 sm:text-[54px]">
@@ -593,23 +593,11 @@ export default async function AccountPage({ params }: AccountPageProps) {
               </div>
             </div>
 
-            <div className="h-full rounded-[26px] bg-black/30 p-4 ring-1 ring-zinc-900 sm:p-5 lg:h-[180px]">
-              <div className="flex h-full flex-col justify-between">
+            <div className="h-full rounded-[26px] bg-black/30 p-4 ring-1 ring-zinc-900 sm:p-5 lg:h-[188px]">
+              <div className="grid h-full grid-rows-[28px_minmax(0,1fr)_62px] gap-3 sm:grid-rows-[28px_minmax(0,1fr)_64px]">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="text-[13px] font-medium text-zinc-500">
-                      Goal
-                    </div>
-
-                    <div className="mt-2">
-                      <div className="truncate pb-1 text-[30px] font-semibold leading-[1.08] tracking-tight text-zinc-100 sm:text-[34px]">
-                        {formatMoney(ruleEquity)}
-                      </div>
-
-                      <div className="mt-1 truncate text-[13px] font-medium leading-[1.2] text-zinc-500">
-                        of {formatMoney(profitTargetBalance)} goal
-                      </div>
-                    </div>
+                  <div className="text-[13px] font-medium leading-none text-zinc-500">
+                    Goal
                   </div>
 
                   <div
@@ -619,21 +607,35 @@ export default async function AccountPage({ params }: AccountPageProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl bg-zinc-950/70 p-3 ring-1 ring-zinc-900">
-                    <div className="text-[11px] text-zinc-600">Remaining</div>
+                <div className="min-w-0 self-center">
+                  <div className="truncate pb-1 text-[38px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[42px] lg:text-[34px]">
+                    {formatMoney(ruleEquity)}
+                  </div>
 
-                    <div className="mt-1 truncate text-[15px] font-semibold leading-[1.15] text-zinc-100">
+                  <div className="mt-2 truncate text-[13px] font-medium leading-none text-zinc-500">
+                    of {formatMoney(profitTargetBalance)} goal
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex min-w-0 flex-col justify-center rounded-2xl bg-zinc-950/70 px-3 ring-1 ring-zinc-900">
+                    <div className="text-[11px] leading-none text-zinc-600">
+                      Remaining
+                    </div>
+
+                    <div className="mt-2 truncate text-[15px] font-semibold leading-none text-zinc-100">
                       {isPassed || remainingToTarget <= 0
                         ? "$0.00"
                         : formatMoney(remainingToTarget)}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl bg-zinc-950/70 p-3 ring-1 ring-zinc-900">
-                    <div className="text-[11px] text-zinc-600">Target</div>
+                  <div className="flex min-w-0 flex-col justify-center rounded-2xl bg-zinc-950/70 px-3 ring-1 ring-zinc-900">
+                    <div className="text-[11px] leading-none text-zinc-600">
+                      Target
+                    </div>
 
-                    <div className="mt-1 truncate text-[15px] font-semibold leading-[1.15] text-zinc-100">
+                    <div className="mt-2 truncate text-[15px] font-semibold leading-none text-zinc-100">
                       {formatPercent(profitTargetPercent)}
                     </div>
                   </div>
