@@ -54,8 +54,8 @@ function formatMoney(value: number | null | undefined) {
   const safeValue = Number(value ?? 0);
 
   return `$${safeValue.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   })}`;
 }
 
