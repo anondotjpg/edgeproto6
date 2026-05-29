@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { usePrivy } from "@privy-io/react-auth";
@@ -61,6 +61,11 @@ type BetSlipModalProps = {
   polymarketTokenId?: string | null;
 };
 
+type BetSlipDrawerStyle = CSSProperties & {
+  "--bet-slip-visible-height": string;
+  "--bet-slip-overhang": string;
+};
+
 const ACCOUNT_GRID_CLASS = "grid grid-cols-3 gap-3";
 
 const ACCOUNT_CARD_CLASS =
@@ -69,6 +74,9 @@ const ACCOUNT_CARD_CLASS =
 const ACCOUNT_SELECT_SHELL_CLASS = "mt-5 h-[122px]";
 
 const ACCOUNT_LIST_CLASS = "mt-3 h-[92px] overflow-hidden";
+
+const MOBILE_DRAWER_VISIBLE_HEIGHT = "82svh";
+const MOBILE_DRAWER_OVERHANG = "420px";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -791,7 +799,19 @@ export default function BetSlipModal({
           onOpenChange={handleOpenChange}
           repositionInputs={false}
         >
-          <DrawerContent className="overflow-hidden border-zinc-800 bg-zinc-950 text-white outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 data-[state=open]:outline-none data-[vaul-drawer-direction=bottom]:bottom-[-360px] data-[vaul-drawer-direction=bottom]:h-[calc(82svh+360px)] data-[vaul-drawer-direction=bottom]:max-h-none">
+          <DrawerContent
+            style={
+              {
+                "--bet-slip-visible-height": MOBILE_DRAWER_VISIBLE_HEIGHT,
+                "--bet-slip-overhang": MOBILE_DRAWER_OVERHANG,
+                bottom: "calc(var(--bet-slip-overhang) * -1)",
+                height:
+                  "calc(var(--bet-slip-visible-height) + var(--bet-slip-overhang))",
+                maxHeight: "none",
+              } as BetSlipDrawerStyle
+            }
+            className="overflow-hidden border-zinc-800 bg-zinc-950 text-white outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 data-[state=open]:outline-none"
+          >
             <DrawerHeader className="sr-only">
               <DrawerTitle>Place Bet</DrawerTitle>
               <DrawerDescription>
@@ -799,7 +819,7 @@ export default function BetSlipModal({
               </DrawerDescription>
             </DrawerHeader>
 
-            <div className="mx-auto flex h-[82svh] w-full max-w-2xl flex-col bg-zinc-950 px-5 pb-[max(18px,env(safe-area-inset-bottom))] pt-2">
+            <div className="mx-auto flex h-[var(--bet-slip-visible-height)] w-full max-w-2xl flex-col bg-zinc-950 px-5 pb-[max(18px,env(safe-area-inset-bottom))] pt-2">
               <div className="mx-auto mb-5 h-1.5 w-12 shrink-0 rounded-full bg-zinc-800" />
 
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-1">
@@ -807,7 +827,10 @@ export default function BetSlipModal({
               </div>
             </div>
 
-            <div aria-hidden="true" className="h-[360px] bg-zinc-950" />
+            <div
+              aria-hidden="true"
+              className="h-[var(--bet-slip-overhang)] shrink-0 bg-zinc-950"
+            />
           </DrawerContent>
         </Drawer>
       ) : open ? (
