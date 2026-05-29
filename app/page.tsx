@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { FiArrowUpRight } from "react-icons/fi";
 import LastUpdatedAgo from "./components/LastUpdatedAgo";
 import LeagueTabs from "./components/LeagueTabs";
+import BetSlipModal from "@/app/components/BetSlipModal";
 
 type OddsOutcome = {
   name: string;
@@ -36,6 +37,22 @@ type Game = {
   home_team_info?: TeamInfo;
   away_team_info?: TeamInfo;
   bookmakers: Bookmaker[];
+
+  polymarket?: {
+    event_id: string;
+    event_slug: string | null;
+    market_id: string;
+    market_slug: string | null;
+    condition_id: string | null;
+    question: string | null;
+    outcomes: string[];
+    clob_token_ids: string[];
+  };
+
+  outcome_token_ids?: {
+    away?: string;
+    home?: string;
+  };
 };
 
 type LeagueBlock = {
@@ -95,6 +112,15 @@ function formatPrice(price?: number) {
   return price > 0 ? `+${price}` : `${price}`;
 }
 
+function formatImpliedPercent(price?: number) {
+  if (price === undefined || price === null || price === 0) return "—";
+
+  const probability =
+    price > 0 ? 100 / (price + 100) : Math.abs(price) / (Math.abs(price) + 100);
+
+  return `${Math.round(probability * 100)}%`;
+}
+
 function formatGameTime(date: string) {
   const formatted = new Date(date).toLocaleString("en-US", {
     timeZone: "America/New_York",
@@ -119,27 +145,49 @@ function getLogoFallbackClassName(sportKey: string) {
     : "h-9 w-9 rounded-sm bg-zinc-950";
 }
 
-function OddsCell({
-  value,
-  href,
+function MoneylineCell({
+  game,
+  team,
+  outcome,
+  side,
   isTop = false,
 }: {
-  value: string;
-  href: string;
+  game: Game;
+  team: string;
+  outcome?: OddsOutcome;
+  side: "away" | "home";
   isTop?: boolean;
 }) {
+  const odds = formatPrice(outcome?.price);
+  const impliedPercent = formatImpliedPercent(outcome?.price);
+
+  const polymarketTokenId =
+    side === "away"
+      ? game.outcome_token_ids?.away
+      : game.outcome_token_ids?.home;
+
   return (
-    <Link
-      href={href}
-      className={[
-        "flex min-h-[56px] items-center justify-center bg-transparent px-3 py-2 text-center transition-colors hover:bg-zinc-800/50",
-        isTop ? "" : "border-t border-zinc-800/60",
-      ].join(" ")}
-    >
-      <div className="text-[14px] font-semibold tracking-tight text-zinc-100">
-        {value}
-      </div>
-    </Link>
+    <div className={isTop ? "" : "border-t border-zinc-800/60"}>
+      <BetSlipModal
+        team={team}
+        gameId={game.id}
+        league={game.sport_key}
+        market="h2h"
+        odds={odds}
+        impliedPercent={impliedPercent}
+        matchup={`${game.away_team} vs. ${game.home_team}`}
+        triggerClassName="flex min-h-[56px] w-full cursor-pointer items-center justify-center bg-transparent px-3 py-2 text-center transition-colors hover:bg-zinc-800/50"
+        triggerContentClassName="text-[14px] font-semibold tracking-tight text-zinc-100"
+        polymarketEventId={game.polymarket?.event_id ?? null}
+        polymarketEventSlug={game.polymarket?.event_slug ?? null}
+        polymarketMarketId={game.polymarket?.market_id ?? null}
+        polymarketConditionId={game.polymarket?.condition_id ?? null}
+        polymarketMarketSlug={game.polymarket?.market_slug ?? null}
+        polymarketOutcome={team}
+        polymarketOutcomeIndex={side === "away" ? 0 : 1}
+        polymarketTokenId={polymarketTokenId ?? null}
+      />
+    </div>
   );
 }
 
@@ -213,13 +261,20 @@ function GameCard({ game }: { game: Game }) {
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/70">
-          <OddsCell
-            value={formatPrice(awayMoneyline?.price)}
-            href={eventHref}
+          <MoneylineCell
+            game={game}
+            team={game.away_team}
+            outcome={awayMoneyline}
+            side="away"
             isTop
           />
 
-          <OddsCell value={formatPrice(homeMoneyline?.price)} href={eventHref} />
+          <MoneylineCell
+            game={game}
+            team={game.home_team}
+            outcome={homeMoneyline}
+            side="home"
+          />
         </div>
       </div>
 

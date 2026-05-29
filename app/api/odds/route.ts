@@ -43,6 +43,7 @@ type GameDebug = {
   eventTitle?: string;
   question?: string;
   outcomes?: string[];
+  clobTokenIds?: string[];
   awaySlugTokens?: string[];
   homeSlugTokens?: string[];
   awayMatchedBy?: string;
@@ -60,6 +61,23 @@ type EventOdds = {
   home_team_info?: TeamInfo;
   away_team_info?: TeamInfo;
   bookmakers: Bookmaker[];
+
+  polymarket?: {
+    event_id: string;
+    event_slug: string | null;
+    market_id: string;
+    market_slug: string | null;
+    condition_id: string | null;
+    question: string | null;
+    outcomes: string[];
+    clob_token_ids: string[];
+  };
+
+  outcome_token_ids?: {
+    away?: string;
+    home?: string;
+  };
+
   debug?: GameDebug;
 };
 
@@ -76,6 +94,9 @@ type PolymarketMarket = {
   question?: string;
   outcomes?: string | string[];
   outcomePrices?: string | string[];
+  clobTokenIds?: string | string[];
+  conditionId?: string;
+  condition_id?: string;
   gameStartTime?: string;
   endDate?: string;
   acceptingOrders?: boolean;
@@ -488,6 +509,7 @@ async function buildGameFromMarket(
 
   const outcomes = parseStringArray(market.outcomes).map(cleanText);
   const prices = parseStringArray(market.outcomePrices).map(Number);
+  const clobTokenIds = parseStringArray(market.clobTokenIds);
 
   if (outcomes.length !== 2 || prices.length !== 2) return null;
 
@@ -521,8 +543,12 @@ async function buildGameFromMarket(
     commence_time: commenceTime,
     away_team: outcomes[awayIndex],
     home_team: outcomes[homeIndex],
-    away_team_info: awayResolved.team ? makeTeamInfo(awayResolved.team) : undefined,
-    home_team_info: homeResolved.team ? makeTeamInfo(homeResolved.team) : undefined,
+    away_team_info: awayResolved.team
+      ? makeTeamInfo(awayResolved.team)
+      : undefined,
+    home_team_info: homeResolved.team
+      ? makeTeamInfo(homeResolved.team)
+      : undefined,
     bookmakers: [
       {
         key: "polymarket",
@@ -545,12 +571,30 @@ async function buildGameFromMarket(
         ],
       },
     ],
+
+    polymarket: {
+      event_id: String(event.id),
+      event_slug: event.slug ?? null,
+      market_id: String(market.id),
+      market_slug: market.slug ?? null,
+      condition_id: market.conditionId ?? market.condition_id ?? null,
+      question: market.question ?? null,
+      outcomes,
+      clob_token_ids: clobTokenIds,
+    },
+
+    outcome_token_ids: {
+      away: clobTokenIds[awayIndex],
+      home: clobTokenIds[homeIndex],
+    },
+
     debug: {
       eventSlug: event.slug,
       marketSlug: market.slug,
       eventTitle: event.title,
       question: market.question,
       outcomes,
+      clobTokenIds,
       awaySlugTokens: awaySlugToken ? [awaySlugToken] : [],
       homeSlugTokens: homeSlugToken ? [homeSlugToken] : [],
       awayMatchedBy: awayResolved.matchedBy,
@@ -651,6 +695,9 @@ async function fetchLeagueGames(league: {
           marketSlug: game.debug?.marketSlug,
           eventSlug: game.debug?.eventSlug,
           question: game.debug?.question,
+          conditionId: game.polymarket?.condition_id,
+          awayTokenId: game.outcome_token_ids?.away,
+          homeTokenId: game.outcome_token_ids?.home,
         },
         null,
         2

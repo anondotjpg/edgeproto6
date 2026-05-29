@@ -41,6 +41,9 @@ type BetSlipModalProps = {
   impliedPercent: string;
   matchup: string;
 
+  triggerClassName?: string;
+  triggerContentClassName?: string;
+
   polymarketEventId?: string | null;
   polymarketEventSlug?: string | null;
   polymarketMarketId?: string | null;
@@ -158,6 +161,8 @@ export default function BetSlipModal({
   odds,
   impliedPercent,
   matchup,
+  triggerClassName,
+  triggerContentClassName,
 
   polymarketEventId,
   polymarketEventSlug,
@@ -413,9 +418,17 @@ export default function BetSlipModal({
       <button
         type="button"
         onClick={openBetSlip}
-        className="flex min-h-[56px] min-w-[104px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-zinc-800 bg-transparent px-4 py-3 text-center transition-colors hover:bg-zinc-900"
+        className={
+          triggerClassName ??
+          "flex min-h-[56px] min-w-[104px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-zinc-800 bg-transparent px-4 py-3 text-center transition-colors hover:bg-zinc-900"
+        }
       >
-        <div className="text-[20px] font-semibold tracking-tight text-zinc-100">
+        <div
+          className={
+            triggerContentClassName ??
+            "text-[20px] font-semibold tracking-tight text-zinc-100"
+          }
+        >
           {odds}
         </div>
       </button>
