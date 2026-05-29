@@ -200,6 +200,7 @@ function BetSlipContent({
   statusMessage,
   statusTone,
   ruleWarning,
+  mobileLayout,
   showCloseButton,
   onClose,
   onToggleAccount,
@@ -222,6 +223,7 @@ function BetSlipContent({
   statusMessage: string | null;
   statusTone: "warning" | "error" | null;
   ruleWarning: string | null;
+  mobileLayout: boolean;
   showCloseButton: boolean;
   onClose: () => void;
   onToggleAccount: (accountId: string) => void;
@@ -230,49 +232,77 @@ function BetSlipContent({
 }) {
   return (
     <>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-            Place Bet
+      {mobileLayout ? (
+        <div className="relative min-h-[64px] pr-[122px] pt-[2px]">
+          <div className="min-w-0 max-w-full">
+            <h2 className="truncate text-2xl font-semibold leading-[1.15] tracking-tight text-zinc-100">
+              {team}
+            </h2>
+
+            <p className="mt-1 truncate text-sm leading-[1.25] text-zinc-400">
+              {matchup}
+            </p>
           </div>
 
-          <h2 className="mt-2 truncate text-2xl font-semibold tracking-tight text-zinc-100">
-            {team}
-          </h2>
+          <div className="absolute right-0 top-0 text-right leading-none">
+            <div className="text-[30px] font-semibold leading-none tracking-tight text-zinc-100">
+              {odds}
+            </div>
 
-          <p className="mt-1 truncate text-sm text-zinc-400">{matchup}</p>
-        </div>
-
-        {showCloseButton ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 cursor-pointer rounded-full border border-zinc-800 px-3 py-1.5 text-sm text-zinc-400 transition-colors hover:text-white"
-          >
-            Close
-          </button>
-        ) : null}
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
-            Moneyline
-          </div>
-
-          <div className="mt-1 text-xl font-semibold text-zinc-100">{odds}</div>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
-            Implied
-          </div>
-
-          <div className="mt-1 text-xl font-semibold text-zinc-100">
-            {impliedPercent}
+            <div className="mt-1.5 text-[22px] font-semibold leading-none text-zinc-500">
+              {impliedPercent}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                Place Bet
+              </div>
+
+              <h2 className="mt-2 max-w-[66%] truncate text-2xl font-semibold tracking-tight text-zinc-100">
+                {team}
+              </h2>
+
+              <p className="mt-1 truncate text-sm text-zinc-400">{matchup}</p>
+            </div>
+
+            {showCloseButton ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="shrink-0 cursor-pointer rounded-full border border-zinc-800 px-3 py-1.5 text-sm text-zinc-400 transition-colors hover:text-white"
+              >
+                Close
+              </button>
+            ) : null}
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+                Moneyline
+              </div>
+
+              <div className="mt-1 text-xl font-semibold text-zinc-100">
+                {odds}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+                Implied
+              </div>
+
+              <div className="mt-1 text-xl font-semibold text-zinc-100">
+                {impliedPercent}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={ACCOUNT_SELECT_SHELL_CLASS}>
         <div className="h-[18px] text-sm font-medium leading-[18px] text-zinc-300">
@@ -742,6 +772,7 @@ export default function BetSlipModal({
       statusMessage={statusMessage}
       statusTone={statusTone}
       ruleWarning={ruleWarning}
+      mobileLayout={isMobile}
       showCloseButton={!isMobile}
       onClose={closeBetSlip}
       onToggleAccount={toggleAccount}
