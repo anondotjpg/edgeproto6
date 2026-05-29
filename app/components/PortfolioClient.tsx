@@ -512,10 +512,6 @@ export default function PortfolioClient() {
                   <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
                     Active Positions
                   </h2>
-
-                  <div className="text-sm text-zinc-500">
-                    pot. payout: {formatMoney(totals.possiblePayout)}
-                  </div>
                 </div>
 
                 {openBets.length ? (

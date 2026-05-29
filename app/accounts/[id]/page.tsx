@@ -669,10 +669,6 @@ export default async function AccountPage({ params }: AccountPageProps) {
                 Bets that are still waiting to settle.
               </p>
             </div>
-
-            <div className="hidden text-[13px] text-zinc-500 sm:block">
-              {formatMoney(reservedRisk)} reserved
-            </div>
           </div>
 
           {openBets.length ? (
