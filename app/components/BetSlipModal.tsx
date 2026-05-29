@@ -1,9 +1,16 @@
 "use client";
 
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { usePrivy } from "@privy-io/react-auth";
+import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
 import {
   Drawer,
   DrawerContent,
@@ -63,10 +70,10 @@ type BetSlipModalProps = {
 };
 
 const ACCOUNT_ROW_CLASS =
-  "flex snap-x gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "flex gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 const ACCOUNT_CARD_CLASS =
-  "h-[92px] snap-start overflow-hidden rounded-2xl border p-3 text-left transition-colors";
+  "h-[92px] overflow-hidden rounded-2xl border p-3 text-left transition-colors";
 
 const ACCOUNT_CARD_STYLE: CSSProperties = {
   flex: "0 0 calc((100% - 24px) / 3)",
@@ -112,8 +119,8 @@ function formatMoney(value: number | null | undefined) {
   const safeValue = Number(value ?? 0);
 
   return `$${safeValue.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   })}`;
 }
 
@@ -241,10 +248,68 @@ function BetSlipContent({
   onQuickAmount: (percent: number) => void;
   onPlaceBet: () => void;
 }) {
+  const accountRowRef = useRef<HTMLDivElement | null>(null);
+
+  const [canScrollBack, setCanScrollBack] = useState(false);
+  const [canScrollForward, setCanScrollForward] = useState(false);
+
   const sliderDisabled = maxBetAmount <= 0;
   const showQuickAmounts = maxBetAmount > 0 && selectedAccountIds.length > 0;
-  const showScrollHint =
-    ready && authenticated && !isLoadingAccounts && accounts.length > 3;
+
+  function updateAccountScrollState() {
+    const row = accountRowRef.current;
+    if (!row) return;
+
+    const maxScrollLeft = row.scrollWidth - row.clientWidth;
+
+    setCanScrollBack(row.scrollLeft > 2);
+    setCanScrollForward(row.scrollLeft < maxScrollLeft - 2);
+  }
+
+  function scrollAccounts(direction: "back" | "forward") {
+    const row = accountRowRef.current;
+    if (!row) return;
+
+    row.scrollTo({
+      left:
+        direction === "back"
+          ? row.scrollLeft - row.clientWidth
+          : row.scrollLeft + row.clientWidth,
+      behavior: "smooth",
+    });
+  }
+
+  useEffect(() => {
+    updateAccountScrollState();
+
+    const row = accountRowRef.current;
+    if (!row) return;
+
+    row.addEventListener("scroll", updateAccountScrollState, { passive: true });
+    window.addEventListener("resize", updateAccountScrollState);
+
+    return () => {
+      row.removeEventListener("scroll", updateAccountScrollState);
+      window.removeEventListener("resize", updateAccountScrollState);
+    };
+  }, [ready, authenticated, isLoadingAccounts, accounts.length]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(updateAccountScrollState);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [ready, authenticated, isLoadingAccounts, accounts.length]);
+
+  const showAccountControls =
+    ready &&
+    authenticated &&
+    !isLoadingAccounts &&
+    !mobileLayout &&
+    accounts.length > 3;
+
+  const reserveAccountControlSpace = !mobileLayout && authenticated;
 
   return (
     <>
@@ -328,25 +393,39 @@ function BetSlipContent({
             Select account
           </div>
 
-          <AnimatePresence initial={false}>
-            {showScrollHint ? (
-              <motion.div
-                key="account-scroll-hint"
-                initial={{ opacity: 0, x: 8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 8 }}
-                transition={{ duration: 0.18, ease: "easeOut" }}
-                className="shrink-0 text-[11px] font-medium leading-[18px] text-zinc-500"
+          {reserveAccountControlSpace ? (
+            <div
+              className={[
+                "flex h-[18px] w-[54px] shrink-0 items-center justify-end gap-2",
+                showAccountControls ? "" : "invisible",
+              ].join(" ")}
+            >
+              <button
+                type="button"
+                aria-label="Previous accounts"
+                onClick={() => scrollAccounts("back")}
+                disabled={!canScrollBack}
+                className="flex h-[18px] w-5 cursor-pointer items-center justify-center text-zinc-500 transition-colors hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
               >
-                Scroll to view more
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
+                <FiArrowLeft className="h-3.5 w-3.5" />
+              </button>
+
+              <button
+                type="button"
+                aria-label="Next accounts"
+                onClick={() => scrollAccounts("forward")}
+                disabled={!canScrollForward}
+                className="flex h-[18px] w-5 cursor-pointer items-center justify-center text-zinc-500 transition-colors hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <FiArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <div className={ACCOUNT_LIST_CLASS}>
           {!ready || isLoadingAccounts ? (
-            <div className={ACCOUNT_ROW_CLASS}>
+            <div ref={accountRowRef} className={ACCOUNT_ROW_CLASS}>
               {Array.from({ length: 3 }).map((_, index) => (
                 <AccountOptionSkeleton key={index} />
               ))}
@@ -360,7 +439,7 @@ function BetSlipContent({
               Sign in to select an account.
             </button>
           ) : accounts.length ? (
-            <div className={ACCOUNT_ROW_CLASS}>
+            <div ref={accountRowRef} className={ACCOUNT_ROW_CLASS}>
               {accounts.map((account) => {
                 const selected = selectedAccountIds.includes(account.id);
                 const active = ["active", "active_dev"].includes(
