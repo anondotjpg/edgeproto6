@@ -78,9 +78,7 @@ function formatCompactAccountSize(value: number | null | undefined) {
 
   if (!size) return "";
 
-  if (size >= 1000) {
-    return `${Math.round(size / 1000)}k`;
-  }
+  if (size >= 1000) return `${Math.round(size / 1000)}k`;
 
   return String(size);
 }
@@ -272,7 +270,7 @@ function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-[24px] border border-zinc-800 bg-zinc-950 p-6">
+    <div className="rounded-[24px] bg-zinc-950/80 p-6 ring-1 ring-zinc-900">
       <h3 className="text-lg font-semibold tracking-tight text-zinc-100">
         {title}
       </h3>
@@ -286,13 +284,11 @@ function EmptyState({
   );
 }
 
-function DetailItem({ label, value }: { label: string; value: ReactNode }) {
+function DetailBox({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="min-w-0">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-zinc-600">
-        {label}
-      </div>
-      <div className="mt-1 truncate text-sm font-semibold text-zinc-100">
+    <div className="min-w-0 rounded-2xl bg-black/30 p-3">
+      <div className="text-[11px] text-zinc-600">{label}</div>
+      <div className="mt-2 truncate text-sm font-semibold leading-none text-zinc-100">
         {value}
       </div>
     </div>
@@ -301,7 +297,7 @@ function DetailItem({ label, value }: { label: string; value: ReactNode }) {
 
 function StatusPill({ status }: { status: string }) {
   return (
-    <div className="shrink-0 rounded-full border border-zinc-800 px-2.5 py-1 text-[11px] font-medium text-zinc-400">
+    <div className="shrink-0 rounded-full bg-black/30 px-2.5 py-1 text-[11px] font-medium text-zinc-400 ring-1 ring-zinc-800">
       {resultLabel(status)}
     </div>
   );
@@ -321,7 +317,7 @@ function SyncButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="shrink-0 rounded-xl border border-zinc-700 px-2.5 py-1 text-[11px] font-medium text-zinc-200 transition-colors hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+      className="h-7 shrink-0 rounded-xl bg-black/30 px-2.5 text-[11px] font-medium text-zinc-300 ring-1 ring-zinc-800 transition-colors hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {isSyncing ? "Syncing" : "Sync"}
     </button>
@@ -344,22 +340,22 @@ function BetCard({
   const hasPolymarketData = Boolean(bet.polymarket_condition_id);
 
   return (
-    <div className="rounded-[22px] border border-zinc-800 bg-zinc-950 p-4">
+    <div className="rounded-[22px] bg-zinc-950/80 p-4 ring-1 ring-zinc-900">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <Link
             href={`/accounts/${bet.account_id}`}
-            className="inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500 transition-colors hover:text-zinc-200"
+            className="block truncate text-[15px] font-semibold leading-tight text-zinc-100 transition-colors hover:text-white"
           >
             {getAccountLabel(bet)}
           </Link>
 
-          <h3 className="mt-2 truncate text-[21px] font-semibold leading-tight tracking-tight text-zinc-100">
+          <h3 className="mt-2 truncate text-[13px] font-medium leading-none text-zinc-500">
             {bet.selection}
           </h3>
 
-          <p className="mt-0.5 text-sm text-zinc-500">
-            {bet.league.toUpperCase()}
+          <p className="mt-2 text-[12px] font-medium uppercase leading-none tracking-[0.16em] text-zinc-600">
+            {bet.league}
           </p>
         </div>
 
@@ -376,46 +372,46 @@ function BetCard({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-zinc-800 pt-3">
-        <DetailItem label="Odds" value={formatOdds(Number(bet.odds))} />
-        <DetailItem label="Stake" value={formatMoney(bet.stake)} />
-        <DetailItem label="Payout" value={formatMoney(bet.potential_payout)} />
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <DetailBox label="Odds" value={formatOdds(Number(bet.odds))} />
+        <DetailBox label="Stake" value={formatMoney(bet.stake)} />
+        <DetailBox label="Payout" value={formatMoney(bet.potential_payout)} />
       </div>
 
       {!active ? (
-        <div className="mt-3 grid grid-cols-2 gap-3 border-t border-zinc-800 pt-3">
-          <DetailItem
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <DetailBox
             label="Settled"
             value={formatMoney(bet.settlement_amount)}
           />
-          <DetailItem label="P/L" value={pnl === null ? "—" : formatMoney(pnl)} />
+          <DetailBox label="P/L" value={pnl === null ? "—" : formatMoney(pnl)} />
         </div>
       ) : null}
 
       {bet.polymarket_winning_outcome ? (
-        <div className="mt-3 border-t border-zinc-800 pt-3">
-          <DetailItem
-            label="Polymarket Result"
-            value={bet.polymarket_winning_outcome}
-          />
+        <div className="mt-2 rounded-2xl bg-black/30 p-3">
+          <div className="text-[11px] text-zinc-600">Polymarket result</div>
+          <div className="mt-2 truncate text-sm font-semibold leading-none text-zinc-100">
+            {bet.polymarket_winning_outcome}
+          </div>
         </div>
       ) : null}
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800 pt-3">
-        <div className="text-[12px] text-zinc-500">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[12px] text-zinc-500">
+        <div>
           {active ? "Placed" : "Settled"}{" "}
           {formatDate(active ? bet.placed_at : bet.settled_at)}
         </div>
 
         {active && bet.polymarket_synced_at ? (
-          <div className="text-[12px] text-zinc-600">
+          <div className="text-zinc-600">
             Synced {formatDate(bet.polymarket_synced_at)}
           </div>
         ) : null}
       </div>
 
       {active && bet.polymarket_resolution_error ? (
-        <div className="mt-3 rounded-xl border border-zinc-800 bg-black/30 p-3 text-[12px] text-zinc-500">
+        <div className="mt-3 rounded-2xl bg-black/30 p-3 text-[12px] leading-5 text-zinc-500 ring-1 ring-zinc-900">
           {bet.polymarket_resolution_error}
         </div>
       ) : null}
@@ -603,7 +599,7 @@ export default function PortfolioClient() {
         ) : (
           <>
             {error ? (
-              <div className="mb-5 rounded-[20px] border border-red-950 bg-red-950/20 p-4 text-sm text-red-300">
+              <div className="mb-5 rounded-[20px] bg-red-950/20 p-4 text-sm text-red-300 ring-1 ring-red-950">
                 {error}
               </div>
             ) : null}
@@ -621,7 +617,7 @@ export default function PortfolioClient() {
                 action={
                   <Link
                     href="/"
-                    className="inline-flex rounded-xl border border-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+                    className="inline-flex rounded-xl bg-black/30 px-4 py-2 text-sm font-medium text-zinc-300 ring-1 ring-zinc-800 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
                   >
                     Browse markets
                   </Link>
@@ -659,7 +655,7 @@ export default function PortfolioClient() {
                       action={
                         <Link
                           href="/"
-                          className="inline-flex rounded-xl border border-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+                          className="inline-flex rounded-xl bg-black/30 px-4 py-2 text-sm font-medium text-zinc-300 ring-1 ring-zinc-800 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
                         >
                           Browse markets
                         </Link>
