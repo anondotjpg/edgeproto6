@@ -458,7 +458,7 @@ export default function PortfolioClient() {
         </h1>
 
         <p className="mt-2 text-sm text-zinc-500">
-          View active and past positions across your accounts
+          View active and past positions across your accounts.
         </p>
       </div>
 
