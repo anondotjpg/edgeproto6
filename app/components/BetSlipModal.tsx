@@ -754,18 +754,17 @@ export default function BetSlipModal({
     <>
       {trigger}
 
+      {isMobile && open ? (
+        <div className="fixed inset-0 z-[49] bg-zinc-950" />
+      ) : null}
+
       {isMobile ? (
         <Drawer
           open={open}
           onOpenChange={handleOpenChange}
           repositionInputs={false}
         >
-          <DrawerContent className="max-h-none overflow-visible border-zinc-800 bg-zinc-950 text-white">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-full h-[100dvh] bg-zinc-950"
-            />
-
+          <DrawerContent className="max-h-none border-zinc-800 bg-zinc-950 text-white">
             <DrawerHeader className="sr-only">
               <DrawerTitle>Place Bet</DrawerTitle>
               <DrawerDescription>
