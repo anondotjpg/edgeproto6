@@ -255,6 +255,7 @@ function BetSlipContent({
 
   const sliderDisabled = maxBetAmount <= 0;
   const showQuickAmounts = maxBetAmount > 0 && selectedAccountIds.length > 0;
+  const showPotentialPayout = amountValue > 0 && possiblePayout !== "—";
 
   function updateAccountScrollState() {
     const row = accountRowRef.current;
@@ -538,12 +539,20 @@ function BetSlipContent({
               </span>
             </div>
 
-            <div className="mt-2 text-[12px] leading-none text-zinc-500">
+            <motion.div
+              animate={{
+                opacity: showPotentialPayout ? 1 : 0,
+                y: showPotentialPayout ? 0 : 3,
+              }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              aria-hidden={!showPotentialPayout}
+              className="mt-2 text-[12px] leading-none text-zinc-500"
+            >
               Pot. payout{" "}
               <span className="font-semibold text-zinc-300">
                 {possiblePayout}
               </span>
-            </div>
+            </motion.div>
           </div>
         </div>
 
