@@ -79,34 +79,33 @@ function BetCardSkeleton() {
 
 function GoalSkeleton() {
   return (
-    <div className="h-full rounded-[26px] bg-black/30 p-4 ring-1 ring-zinc-900 sm:p-5 lg:h-[220px]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="text-[13px] font-medium text-zinc-500">Goal</div>
+    <div className="h-full rounded-[26px] bg-black/30 p-4 ring-1 ring-zinc-900 sm:p-5 lg:h-[180px]">
+      <div className="flex h-full flex-col justify-between">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="text-[13px] font-medium text-zinc-500">Goal</div>
 
-          <div className="mt-2">
-            <SkeletonBlock className="h-8 w-40 sm:h-9 sm:w-44" />
-            <SkeletonBlock className="mt-2 h-3 w-32" />
+            <div className="mt-2">
+              <SkeletonBlock className="h-8 w-40 sm:h-9 sm:w-44" />
+              <SkeletonBlock className="mt-2 h-3 w-32" />
+            </div>
+          </div>
+
+          <SkeletonBlock className="h-7 w-16 shrink-0 rounded-full" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-zinc-950/70 p-3 ring-1 ring-zinc-900">
+            <div className="text-[11px] text-zinc-600">Remaining</div>
+            <SkeletonBlock className="mt-2 h-4 w-20" />
+          </div>
+
+          <div className="rounded-2xl bg-zinc-950/70 p-3 ring-1 ring-zinc-900">
+            <div className="text-[11px] text-zinc-600">Target</div>
+            <SkeletonBlock className="mt-2 h-4 w-12" />
           </div>
         </div>
-
-        <SkeletonBlock className="h-7 w-16 shrink-0 rounded-full" />
       </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <div className="rounded-2xl bg-zinc-950/70 p-3 ring-1 ring-zinc-900">
-          <div className="text-[11px] text-zinc-600">Remaining</div>
-          <SkeletonBlock className="mt-2 h-4 w-20" />
-        </div>
-
-        <div className="rounded-2xl bg-zinc-950/70 p-3 ring-1 ring-zinc-900">
-          <div className="text-[11px] text-zinc-600">Target</div>
-          <SkeletonBlock className="mt-2 h-4 w-12" />
-        </div>
-      </div>
-
-      <SkeletonBlock className="mt-4 h-3 w-full" />
-      <SkeletonBlock className="mt-2 h-3 w-4/5" />
     </div>
   );
 }
@@ -114,9 +113,9 @@ function GoalSkeleton() {
 export default function LoadingAccountPage() {
   return (
     <div className="min-h-screen bg-[#09090b] px-4 pb-24 pt-6 text-white sm:px-6 md:pb-12 md:pt-10">
-      <div className="mx-auto mt-7 w-full max-w-6xl">
-        <section className="h-[500px] rounded-[32px] bg-zinc-950/90 p-5 sm:h-[560px] sm:p-7 lg:h-[400px]">
-          <div className="grid h-full grid-rows-[minmax(0,1fr)_220px] gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:grid-rows-1 lg:items-center lg:gap-7">
+      <div className="mx-auto mt-5 w-full max-w-6xl sm:mt-6">
+        <section className="h-[456px] rounded-[32px] bg-zinc-950/90 p-5 sm:h-[508px] sm:p-7 lg:h-[330px]">
+          <div className="grid h-full grid-rows-[220px_180px] gap-4 sm:grid-rows-[252px_180px] sm:gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:grid-rows-1 lg:items-center lg:gap-7">
             <div className="min-h-0 min-w-0 self-center overflow-visible">
               <div className="h-[46px] sm:h-[62px]">
                 <SkeletonBlock className="h-[40px] w-64 max-w-full sm:h-[58px] sm:w-80" />
@@ -145,14 +144,14 @@ export default function LoadingAccountPage() {
           </div>
         </section>
 
-        <section className="mt-3 grid h-[196px] grid-cols-2 gap-2 sm:h-[224px] sm:gap-3 lg:h-[106px] lg:grid-cols-4">
+        <section className="mt-2 grid h-[196px] grid-cols-2 gap-2 sm:mt-3 sm:h-[224px] sm:gap-3 lg:h-[106px] lg:grid-cols-4">
           <MetricSkeleton label="Rule equity" />
           <MetricSkeleton label="Open risk" />
           <MetricSkeleton label="Max bet" />
           <MetricSkeleton label="Account size" />
         </section>
 
-        <section className="mt-3 grid h-[488px] gap-3 lg:h-[238px] lg:grid-cols-2">
+        <section className="mt-2 grid h-[488px] gap-3 sm:mt-3 lg:h-[238px] lg:grid-cols-2">
           <RuleSkeleton label="Daily loss room" />
           <RuleSkeleton label="Total loss room" />
         </section>
