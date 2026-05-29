@@ -19,13 +19,13 @@ type ExistingAccount = {
 const MAX_ACCOUNT_NAME_LENGTH = 15;
 
 const ACCOUNT_ROW_CLASS =
-  "flex snap-x gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain px-px py-px [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "flex snap-x gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 const ACCOUNT_CARD_CLASS =
-  "group min-h-[72px] snap-start rounded-[14px] bg-zinc-950 px-4 py-3 ring-1 ring-zinc-900 transition-colors hover:bg-zinc-900/80 hover:ring-zinc-800";
+  "group min-h-[72px] snap-start rounded-[14px] border border-zinc-900 bg-zinc-950 px-4 py-3 transition-colors hover:border-zinc-800 hover:bg-zinc-900/80";
 
 const ACCOUNT_CARD_WIDTH_CLASS =
-  "flex-[0_0_calc(100%_-_2px)] sm:flex-[0_0_calc((100%_-_10px)_/_2)] xl:flex-[0_0_calc((100%_-_18px)_/_3)]";
+  "flex-[0_0_100%] sm:flex-[0_0_calc((100%_-_8px)_/_2)] xl:flex-[0_0_calc((100%_-_16px)_/_3)]";
 
 function SkeletonBlock({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-md bg-zinc-900 ${className}`} />;
@@ -72,7 +72,7 @@ function AccountSkeletonCard() {
 
 function EmptyAccountCard({ authenticated }: { authenticated: boolean }) {
   return (
-    <div className="flex min-h-[72px] items-center justify-between rounded-[14px] bg-zinc-950 px-4 py-3 ring-1 ring-zinc-900">
+    <div className="flex min-h-[72px] items-center justify-between rounded-[14px] border border-zinc-900 bg-zinc-950 px-4 py-3">
       <div className="min-w-0">
         <div className="text-[14px] font-medium text-zinc-300">
           No active accounts
@@ -213,7 +213,7 @@ export default function OwnedAccountsSection() {
   const showScrollHint = showAccounts && accounts.length > 3;
 
   return (
-    <div className="mb-6 min-h-[122px] md:pt-[5%] xl:pt-0">
+    <div className="mb-6 min-h-[122px] md:pt-[5%] lg:pt-0">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="min-w-0 text-[13px] font-medium uppercase tracking-[0.18em] text-zinc-500">
           Active Accounts{" "}
