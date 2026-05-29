@@ -549,11 +549,6 @@ export default async function AccountPage({ params }: AccountPageProps) {
 
   const pageTitle = accountName || `${fallbackAccountTitle} Challenge`;
 
-  const targetProgress =
-    profitTargetBalance > 0
-      ? Math.min(Math.max((ruleEquity / profitTargetBalance) * 100, 0), 100)
-      : 0;
-
   const remainingToTarget = Math.max(profitTargetBalance - ruleEquity, 0);
   const dailyRoom = ruleEquity - dailyFloor;
   const totalRoom = ruleEquity - totalFloor;
@@ -572,7 +567,6 @@ export default async function AccountPage({ params }: AccountPageProps) {
 
         <section className="rounded-[32px] bg-zinc-950/90 p-5 sm:p-7">
           <div className="relative">
-
             <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
               <div className="min-w-0 pr-24 sm:pr-32">
                 <h1 className="text-[34px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[48px]">
@@ -615,33 +609,27 @@ export default async function AccountPage({ params }: AccountPageProps) {
 
               <div className="rounded-[26px] bg-black/30 p-4 ring-1 ring-zinc-900 sm:p-5">
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-[13px] font-medium text-zinc-500">
                       Goal
                     </div>
 
-                    <div className="mt-1 text-[30px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[34px]">
-                      {formatMoney(profitTargetBalance)}
+                    <div className="mt-2">
+                      <div className="text-[30px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[34px]">
+                        {formatMoney(ruleEquity)}
+                      </div>
+
+                      <div className="mt-2 text-[13px] font-medium leading-none text-zinc-500">
+                        of {formatMoney(profitTargetBalance)} goal
+                      </div>
                     </div>
                   </div>
 
                   <div
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${accountStatusClassName()}`}
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${accountStatusClassName()}`}
                   >
                     {resultLabel(accountStatus)}
                   </div>
-                </div>
-
-                <div className="mt-5">
-                  <div className="mb-2 flex items-center justify-between text-[12px] text-zinc-500">
-                    <span>Progress</span>
-                    <span>{formatMoney(ruleEquity)}</span>
-                  </div>
-
-                  <ProgressBar
-                    value={targetProgress}
-                    tone={isPassed ? "success" : "default"}
-                  />
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">

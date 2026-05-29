@@ -93,22 +93,16 @@ function GoalSkeleton() {
   return (
     <div className="rounded-[26px] bg-black/30 p-4 ring-1 ring-zinc-900 sm:p-5">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <div className="text-[13px] font-medium text-zinc-500">Goal</div>
 
-          <SkeletonBlock className="mt-2 h-8 w-40 sm:h-9 sm:w-44" />
+          <div className="mt-2">
+            <SkeletonBlock className="h-8 w-40 sm:h-9 sm:w-44" />
+            <SkeletonBlock className="mt-2 h-3 w-32" />
+          </div>
         </div>
 
-        <SkeletonBlock className="h-7 w-16 rounded-full" />
-      </div>
-
-      <div className="mt-5">
-        <div className="mb-2 flex items-center justify-between text-[12px] text-zinc-500">
-          <span>Progress</span>
-          <SkeletonBlock className="h-3 w-20" />
-        </div>
-
-        <SkeletonBlock className="h-2 w-full rounded-full" />
+        <SkeletonBlock className="h-7 w-16 shrink-0 rounded-full" />
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
