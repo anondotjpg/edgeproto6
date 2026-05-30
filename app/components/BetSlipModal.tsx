@@ -708,18 +708,18 @@ function BetSlipContent({
         onPointerLeave={cancelHoldToPlace}
         onPointerCancel={cancelHoldToPlace}
         disabled={placeBetDisabled}
-        className="relative mt-5 mb-3 h-14 w-full cursor-pointer overflow-hidden rounded-2xl bg-zinc-100 text-[16px] font-semibold text-zinc-950 transition-opacity disabled:cursor-not-allowed disabled:opacity-40 md:mb-0 md:h-12 md:text-[15px]"
+        className="relative mt-5 mb-3 h-14 w-full cursor-pointer select-none overflow-hidden rounded-2xl bg-zinc-100 text-[16px] font-semibold text-zinc-950 transition-opacity disabled:cursor-not-allowed disabled:opacity-40 md:mb-0 md:h-12 md:text-[15px]"
       >
         {mobileLayout ? (
           <span
-            className="absolute inset-y-0 left-0 bg-zinc-300"
+            className="pointer-events-none absolute inset-y-0 left-0 bg-zinc-300"
             style={{
               width: `${holdProgress * 100}%`,
             }}
           />
         ) : null}
 
-        <span className="relative z-10">
+        <span className="pointer-events-none relative z-10 select-none">
           {isPlacing
             ? "Placing..."
             : mobileLayout
