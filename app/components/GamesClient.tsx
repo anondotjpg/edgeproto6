@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { FiArrowUpRight } from "react-icons/fi";
+import { FaChevronRight } from "react-icons/fa";
 import LastUpdatedAgo from "./LastUpdatedAgo";
 import LeagueTabs from "./LeagueTabs";
 import BetSlipModal, { BetSlipPanel, type BetSlipData } from "./BetSlipModal";
@@ -255,6 +256,20 @@ function MoneylineCell({
   );
 }
 
+function MarketHeader() {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_84px] gap-2 px-0 md:px-3">
+      <div className="pl-1 text-[9px] font-medium uppercase tracking-[0.14em] text-zinc-500">
+        Teams
+      </div>
+
+      <div className="flex items-center justify-center text-[9px] font-medium uppercase tracking-[0.14em] text-zinc-500">
+        ML
+      </div>
+    </div>
+  );
+}
+
 function GameCard({
   game,
   selectedBet,
@@ -278,17 +293,7 @@ function GameCard({
     selectedBet?.gameId === game.id && selectedBet.team === game.home_team;
 
   return (
-    <article className="relative pb-7 md:rounded-xl md:border md:border-zinc-900 md:p-3 md:pb-9">
-      <div className="mb-1.5 grid grid-cols-[minmax(0,1fr)_84px]">
-        <div className="pl-1 text-[9px] font-medium uppercase tracking-[0.14em] text-zinc-500">
-          Teams
-        </div>
-
-        <div className="flex items-center justify-center text-[9px] font-medium uppercase tracking-[0.14em] text-zinc-500">
-          ML
-        </div>
-      </div>
-
+    <article className="relative pb-7 md:rounded-xl md:border md:border-zinc-800 md:p-3 md:pb-9">
       <div className="grid grid-cols-[minmax(0,1fr)_84px] gap-2">
         <div>
           <TeamRow
@@ -334,7 +339,7 @@ function GameCard({
         className="absolute bottom-0 right-1 inline-flex items-center gap-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:text-white md:bottom-3 md:right-3"
       >
         <span>View</span>
-        <FiArrowUpRight className="h-3.5 w-3.5" />
+        <FaChevronRight className="h-2.5 w-2.5" />
       </Link>
     </article>
   );
@@ -413,21 +418,25 @@ export default function GamesClient({
                   No active {selectedLeagueMeta.label} markets right now.
                 </div>
               ) : (
-                <div className="grid gap-5 md:gap-3">
-                  {league.games.map((game) => (
-                    <GameCard
-                      key={game.id}
-                      game={game}
-                      selectedBet={selectedBet}
-                      onSelectBet={setSelectedBet}
-                    />
-                  ))}
+                <div className="grid gap-2">
+                  <MarketHeader />
+
+                  <div className="grid gap-5 md:gap-3">
+                    {league.games.map((game) => (
+                      <GameCard
+                        key={game.id}
+                        game={game}
+                        selectedBet={selectedBet}
+                        onSelectBet={setSelectedBet}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </section>
           </main>
 
-          <aside className="sticky top-6 hidden xl:block">
+          <aside className="sticky top-18 hidden xl:block">
             <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
               {selectedBet ? (
                 <BetSlipPanel {...selectedBet} enabled panelMode="sidebar" />
