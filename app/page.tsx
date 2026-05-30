@@ -291,7 +291,7 @@ function GameCard({ game }: { game: Game }) {
         className="absolute bottom-0 right-1 inline-flex items-center gap-1.5 text-[12px] font-medium text-zinc-400 transition-colors hover:text-white md:bottom-4 md:right-4"
       >
         <span>View</span>
-        <FaChevronRight className="h-3.5 w-3.5" />
+        <FaChevronRight className="h-2.5 w-2.5" />
       </Link>
     </article>
   );
