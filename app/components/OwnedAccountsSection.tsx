@@ -10,7 +10,7 @@ import {
   FiArrowUpRight,
   FiEdit2,
 } from "react-icons/fi";
-
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 type ExistingAccount = {
   id: string;
   account_name: string | null;
@@ -295,7 +295,7 @@ export default function OwnedAccountsSection() {
               hasOverflowControls ? "cursor-pointer" : "invisible",
             ].join(" ")}
           >
-            <FiArrowLeft className="h-4 w-4" />
+            <FaChevronLeft className="h-4 w-4" />
           </button>
 
           <button
@@ -308,7 +308,7 @@ export default function OwnedAccountsSection() {
               hasOverflowControls ? "cursor-pointer" : "invisible",
             ].join(" ")}
           >
-            <FiArrowRight className="h-4 w-4" />
+            <FaChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
