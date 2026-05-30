@@ -814,7 +814,7 @@ function BetSlipControls({
         </AnimatePresence>
 
         <div
-          className="-mx-1 mt-4 overflow-hidden px-5"
+          className="-mx-1 mt-4 overflow-hidden px-5 md:px-0"
           data-vaul-no-drag=""
           onPointerDown={(event) => event.stopPropagation()}
           onTouchStart={(event) => event.stopPropagation()}
