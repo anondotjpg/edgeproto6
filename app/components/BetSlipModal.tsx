@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import NumberFlow from "@number-flow/react";
 import { toast } from "sonner";
 import { usePrivy } from "@privy-io/react-auth";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -128,6 +129,99 @@ function formatMoney(value: number | null | undefined) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   })}`;
+}
+
+function MoneyFlow({
+  value,
+  className,
+}: {
+  value: number | null | undefined;
+  className?: string;
+}) {
+  return (
+    <NumberFlow
+      value={Number(value ?? 0)}
+      format={{
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }}
+      className={className}
+    />
+  );
+}
+
+function CompactMoneyFlow({
+  value,
+  className,
+}: {
+  value: number | null | undefined;
+  className?: string;
+}) {
+  const safeValue = Number(value ?? 0);
+
+  if (Math.abs(safeValue) >= 1000) {
+    const compactValue = safeValue / 1000;
+
+    return (
+      <span className={className}>
+        $
+        <NumberFlow
+          value={compactValue}
+          format={{
+            minimumFractionDigits: 0,
+            maximumFractionDigits: safeValue % 1000 === 0 ? 0 : 1,
+          }}
+        />
+        k
+      </span>
+    );
+  }
+
+  return <MoneyFlow value={safeValue} className={className} />;
+}
+
+function SignedNumberFlow({
+  value,
+  className,
+}: {
+  value: number | null | undefined;
+  className?: string;
+}) {
+  return (
+    <NumberFlow
+      value={Number(value ?? 0)}
+      format={{
+        signDisplay: "exceptZero",
+        maximumFractionDigits: 0,
+      }}
+      className={className}
+    />
+  );
+}
+
+function PercentFlow({
+  value,
+  className,
+}: {
+  value: number | null | undefined;
+  className?: string;
+}) {
+  return (
+    <NumberFlow
+      value={Number(value ?? 0)}
+      format={{
+        maximumFractionDigits: 0,
+      }}
+      suffix="%"
+      className={className}
+    />
+  );
+}
+
+function parseImpliedPercent(value: string) {
+  return Number(value.replace("%", ""));
 }
 
 function formatCompactMoney(value: number | null | undefined) {
@@ -263,16 +357,16 @@ const BetSlipHeader = memo(function BetSlipHeader({
                 : "text-[34px]",
           ].join(" ")}
         >
-          {odds}
+          <SignedNumberFlow value={parseOdds(odds)} />
         </div>
 
         <div
           className={[
-            "mt-1.5 font-semibold leading-none text-zinc-500",
+            "-mt-1 font-semibold leading-none text-zinc-500",
             panelMode === "sidebar" ? "text-[18px]" : "text-[22px]",
           ].join(" ")}
         >
-          {impliedPercent}
+          <PercentFlow value={parseImpliedPercent(impliedPercent)} />
         </div>
       </div>
     </div>
@@ -321,7 +415,7 @@ function OffsetPlaceBetButton({
         onPointerLeave={onPointerLeave}
         onPointerCancel={onPointerCancel}
         disabled={disabled}
-        className="relative mt-5 mb-7 h-16 w-full cursor-pointer select-none overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 text-[16px] font-semibold text-zinc-100 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+        className="relative mt-3 mb-7 h-16 w-full cursor-pointer select-none overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 text-[16px] font-semibold text-zinc-100 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span
           className="pointer-events-none absolute inset-y-0 left-0 bg-zinc-800"
@@ -341,7 +435,7 @@ function OffsetPlaceBetButton({
     <div
       className={[
         "rounded-2xl bg-zinc-800",
-        panelMode === "sidebar" ? "mt-5 mb-5" : "mt-5 mb-0",
+        panelMode === "sidebar" ? "mt-3 mb-5" : "mt-3 mb-0",
       ].join(" ")}
       style={{
         paddingBottom: "2px",
@@ -567,14 +661,14 @@ const AccountSelectSection = memo(function AccountSelectSection({
                     <div className="flex h-4 items-center justify-between gap-2">
                       <span className="text-zinc-500">Avail</span>
                       <span className="font-medium text-zinc-300">
-                        {formatCompactMoney(account.current_balance)}
+                        <CompactMoneyFlow value={account.current_balance} />
                       </span>
                     </div>
 
                     <div className="flex h-4 items-center justify-between gap-2">
                       <span className="text-zinc-500">Max</span>
                       <span className="font-medium text-zinc-300">
-                        {formatCompactMoney(maxRiskAmount)}
+                        <CompactMoneyFlow value={maxRiskAmount} />
                       </span>
                     </div>
                   </div>
@@ -603,6 +697,7 @@ function BetSlipControls({
   amountValue,
   maxBetAmount,
   possiblePayout,
+  possiblePayoutValue,
   statusMessage,
   statusTone,
   ruleWarning,
@@ -623,6 +718,7 @@ function BetSlipControls({
   amountValue: number;
   maxBetAmount: number;
   possiblePayout: string;
+  possiblePayoutValue: number;
   statusMessage: string | null;
   statusTone: "warning" | "error" | null;
   ruleWarning: string | null;
@@ -762,17 +858,17 @@ function BetSlipControls({
                 <div className="text-[12px] leading-none text-zinc-500">
                   Max{" "}
                   <span className="font-semibold text-zinc-300">
-                    {formatMoney(maxBetAmount)}
+                    <MoneyFlow value={maxBetAmount} />
                   </span>
                 </div>
 
                 <div
                   aria-hidden={!showPotentialPayout}
-                  className="mt-2 text-[12px] leading-none text-zinc-500"
+                  className="text-[12px] leading-none text-zinc-500"
                 >
                   Pot. payout{" "}
                   <span className="font-semibold text-zinc-300">
-                    {possiblePayout}
+                    <MoneyFlow value={possiblePayoutValue} />
                   </span>
                 </div>
               </div>
@@ -815,7 +911,7 @@ function BetSlipControls({
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="text-sm font-medium leading-none text-zinc-300">
-                Bet amount
+                Amount
               </div>
 
               <motion.div
@@ -826,7 +922,7 @@ function BetSlipControls({
                 transition={{ duration: 0.18, ease: "easeOut" }}
                 className="mt-2 text-[34px] font-semibold leading-none tracking-tight text-zinc-100"
               >
-                {formatMoney(amountValue)}
+                <MoneyFlow value={amountValue} />
               </motion.div>
             </div>
 
@@ -834,17 +930,17 @@ function BetSlipControls({
               <div className="text-[12px] leading-none text-zinc-500">
                 Max{" "}
                 <span className="font-semibold text-zinc-300">
-                  {formatMoney(maxBetAmount)}
+                  <MoneyFlow value={maxBetAmount} />
                 </span>
               </div>
 
               <div
                 aria-hidden={!showPotentialPayout}
-                className="mt-2 text-[12px] leading-none text-zinc-500"
+                className="text-[12px] leading-none text-zinc-500"
               >
                 Pot. payout{" "}
                 <span className="font-semibold text-zinc-300">
-                  {possiblePayout}
+                  <MoneyFlow value={possiblePayoutValue} />
                 </span>
               </div>
             </div>
@@ -976,6 +1072,8 @@ const MemoBetSlipControls = memo(BetSlipControls, (prev, next) => {
     prev.isPlacing === next.isPlacing &&
     prev.amountValue === next.amountValue &&
     prev.maxBetAmount === next.maxBetAmount &&
+    prev.possiblePayout === next.possiblePayout &&
+    prev.possiblePayoutValue === next.possiblePayoutValue &&
     prev.statusMessage === next.statusMessage &&
     prev.statusTone === next.statusTone &&
     prev.ruleWarning === next.ruleWarning &&
@@ -1003,6 +1101,7 @@ function BetSlipContent({
   amountValue,
   maxBetAmount,
   possiblePayout,
+  possiblePayoutValue,
   statusMessage,
   statusTone,
   ruleWarning,
@@ -1027,6 +1126,7 @@ function BetSlipContent({
   amountValue: number;
   maxBetAmount: number;
   possiblePayout: string;
+  possiblePayoutValue: number;
   statusMessage: string | null;
   statusTone: "warning" | "error" | null;
   ruleWarning: string | null;
@@ -1059,6 +1159,7 @@ function BetSlipContent({
         amountValue={amountValue}
         maxBetAmount={maxBetAmount}
         possiblePayout={possiblePayout}
+        possiblePayoutValue={possiblePayoutValue}
         statusMessage={statusMessage}
         statusTone={statusTone}
         ruleWarning={ruleWarning}
@@ -1119,17 +1220,21 @@ export function BetSlipPanel({
     return Math.floor(Math.min(...accountMaxes));
   }, [selectedAccounts]);
 
-  const possiblePayout = useMemo(() => {
-    if (!stake || Number.isNaN(stake)) return "—";
-    if (!numericOdds || Number.isNaN(numericOdds)) return "—";
+  const possiblePayoutValue = useMemo(() => {
+    if (!stake || Number.isNaN(stake)) return 0;
+    if (!numericOdds || Number.isNaN(numericOdds)) return 0;
 
     const profit =
       numericOdds > 0
         ? stake * (numericOdds / 100)
         : stake * (100 / Math.abs(numericOdds));
 
-    return formatMoney(stake + profit);
+    return stake + profit;
   }, [stake, numericOdds]);
+
+  const possiblePayout = useMemo(() => {
+    return formatMoney(possiblePayoutValue);
+  }, [possiblePayoutValue]);
 
   const ruleWarning = useMemo(() => {
     if (!selectedAccounts.length) return null;
@@ -1387,6 +1492,7 @@ export function BetSlipPanel({
       amountValue={amountValue}
       maxBetAmount={maxBetAmount}
       possiblePayout={possiblePayout}
+      possiblePayoutValue={possiblePayoutValue}
       statusMessage={statusMessage}
       statusTone={statusTone}
       ruleWarning={ruleWarning}
