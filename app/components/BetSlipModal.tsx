@@ -785,7 +785,7 @@ function BetSlipControls({
                 key={amountShakeKey}
                 animate={
                   amountShakeKey > 0
-                    ? { x: [0, -8, 8, -6, 6, 0] }
+                    ? { x: [0, -4, 4, -2, 2, 0] }
                     : { x: 0 }
                 }
                 transition={{ duration: 0.28, ease: "easeOut" }}
@@ -804,7 +804,7 @@ function BetSlipControls({
                   onFocus={(event) => event.currentTarget.select()}
                   inputMode="numeric"
                   placeholder="$0"
-                  className="h-[62px] w-full bg-transparent text-right text-[56px] font-semibold leading-none tracking-tight text-zinc-500 outline-none placeholder:text-zinc-600"
+                  className="h-[62px] w-full bg-transparent text-right text-[56px] font-semibold leading-none tracking-tight text-white outline-none placeholder:text-zinc-600"
                 />
               </motion.div>
             </div>
