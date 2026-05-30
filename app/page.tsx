@@ -234,8 +234,8 @@ function GameCard({ game }: { game: Game }) {
   const eventHref = `/event/${game.slug}`;
 
   return (
-    <article className="relative pb-9 md:rounded-[24px] md:bg-zinc-900/30 md:p-4 md:pb-12">
-      <div className="mb-2 grid grid-cols-[minmax(0,1fr)_96px] md:grid-cols-[minmax(0,1fr)_96px]">
+    <article className="relative pb-9 md:rounded-xl md:border md:border-zinc-900 md:p-4 md:pb-12">
+      <div className="mb-2 grid grid-cols-[minmax(0,1fr)_96px]">
         <div className="pl-1 text-[9px] font-medium uppercase tracking-[0.14em] text-zinc-500">
           Teams
         </div>
@@ -349,7 +349,7 @@ export default async function Home({
             </div>
 
             {!league || league.games.length === 0 ? (
-              <div className="rounded-[24px] bg-zinc-900/40 p-5 text-[13px] text-zinc-400">
+              <div className="rounded-[18px] border border-zinc-800 p-5 text-[13px] text-zinc-400">
                 No active {selectedLeagueMeta.label} markets right now.
               </div>
             ) : (
