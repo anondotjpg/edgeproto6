@@ -94,7 +94,7 @@ export default function RootLayout({
           <AppSidebar />
           <TopRightAuth />
 
-          <main className="min-h-screen bg-[#09090b] md:pl-[220px]">
+          <main className="min-h-screen bg-[#09090b] md:pl-[260px]">
             {children}
           </main>
 
