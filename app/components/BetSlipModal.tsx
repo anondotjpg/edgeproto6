@@ -885,7 +885,7 @@ function BetSlipControls({
                       whileTap={{ scale: 0.96 }}
                       onClick={() => onQuickAmount(option.value)}
                       className={[
-                        "h-9 cursor-pointer rounded-full text-[13px] font-semibold transition-colors",
+                        "h-9 cursor-pointer rounded-lg text-[13px] font-semibold transition-colors",
                         selected
                           ? "bg-zinc-100 text-zinc-950"
                           : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800",
