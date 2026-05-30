@@ -212,7 +212,7 @@ const BetSlipHeader = memo(function BetSlipHeader({
       className={[
         "relative pr-[122px]",
         panelMode === "sidebar"
-          ? "min-h-[72px] px-5 pt-4 pb-1"
+          ? "min-h-[82px] border-b border-zinc-800 px-5 pt-4 pb-3"
           : mobileLayout
             ? "min-h-[64px] pt-[2px]"
             : "min-h-[72px]",
@@ -464,7 +464,7 @@ const AccountSelectSection = memo(function AccountSelectSection({
   return (
     <div
       className={
-        panelMode === "sidebar" ? "mt-2 h-[126px]" : ACCOUNT_SELECT_SHELL_CLASS
+        panelMode === "sidebar" ? "mt-4 h-[126px]" : ACCOUNT_SELECT_SHELL_CLASS
       }
     >
       <div className="flex h-[18px] items-center justify-between gap-3">
