@@ -612,9 +612,9 @@ const AccountSelectSection = memo(function AccountSelectSection({
           <button
             type="button"
             onClick={login}
-            className="h-[92px] w-full cursor-pointer rounded-2xl border border-zinc-800 bg-black/30 p-4 text-left text-sm text-zinc-300"
+            className="flex h-[92px] w-full cursor-pointer items-start rounded-2xl border border-zinc-800 bg-black/30 p-4 text-left text-base text-zinc-300"
           >
-            Sign in to select an account.
+            <span className="inline underline cursor-pointer">Sign in</span>&nbsp;to select an account
           </button>
         ) : accounts.length ? (
           <div ref={accountRowRef} className={ACCOUNT_ROW_CLASS}>
