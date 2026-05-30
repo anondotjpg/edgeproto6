@@ -181,7 +181,7 @@ function MoneylineCell({
         odds={odds}
         impliedPercent={impliedPercent}
         matchup={`${game.away_team} vs. ${game.home_team}`}
-        triggerClassName="flex h-[42px] w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 text-center transition-[transform,border-color] duration-100 hover:translate-y-[-1px] hover:border-zinc-700 active:translate-y-0"
+        triggerClassName="flex h-[42px] w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 text-center transition-[transform,border-color] duration-100 hover:translate-y-[-1px] active:translate-y-0"
         triggerContentClassName="text-[13px] font-semibold tracking-tight text-zinc-100"
         polymarketEventId={game.polymarket?.event_id ?? null}
         polymarketEventSlug={game.polymarket?.event_slug ?? null}
