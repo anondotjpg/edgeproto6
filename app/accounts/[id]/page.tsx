@@ -307,7 +307,7 @@ function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="min-h-[154px] rounded-[26px] bg-zinc-950/70 p-6 ring-1 ring-zinc-900">
+    <div className="min-h-[154px] bg-zinc-950/70">
       <div className="text-[17px] font-semibold tracking-tight text-zinc-100">
         {title}
       </div>
@@ -481,6 +481,25 @@ function EmptyTableRow({ message }: { message: string }) {
   );
 }
 
+function EmptyOpenPositionsRow() {
+  return (
+    <div className="border-b border-zinc-900/80 px-3 py-3 last:border-b-0 sm:px-5 lg:min-w-[640px]">
+      <EmptyState
+        title="No open positions"
+        description="This account has no active bets right now. New positions will appear here after a bet is placed."
+        action={
+          <Link
+            href="/"
+            className="inline-flex rounded-xl bg-black/30 px-4 py-2 text-sm font-medium text-zinc-300 ring-1 ring-zinc-800 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+          >
+            Browse markets
+          </Link>
+        }
+      />
+    </div>
+  );
+}
+
 function ActiveBetRow({ bet }: { bet: BetRow }) {
   const displayStatus = bet.result ?? bet.status;
 
@@ -591,7 +610,7 @@ function PositionsTable({
       {openBets.length ? (
         openBets.map((bet) => <ActiveBetRow key={bet.id} bet={bet} />)
       ) : (
-        <EmptyTableRow message="No open positions." />
+        <EmptyOpenPositionsRow />
       )}
 
       <TableSectionHeader title="Past" count={pastBets.length} />
@@ -733,9 +752,11 @@ export default async function AccountPage({ params }: AccountPageProps) {
           <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)]">
             <div className="flex h-[142px] min-w-0 flex-col justify-between overflow-hidden lg:h-[146px]">
               <div className="min-w-0">
-                <h1 className="truncate pb-1 text-[29px] font-semibold leading-[1.08] tracking-tight text-zinc-100 sm:text-[34px] lg:text-[36px]">
-                  {pageTitle}
-                </h1>
+                <div className="flex h-[36px] max-w-full items-start overflow-hidden sm:h-[42px] lg:h-[44px]">
+                  <h1 className="truncate text-[29px] font-semibold leading-[1.08] tracking-tight text-zinc-100 sm:text-[34px] lg:text-[36px]">
+                    {pageTitle}
+                  </h1>
+                </div>
 
                 <div className="mt-3 text-[12px] font-medium leading-none text-zinc-500">
                   Rule equity
@@ -818,7 +839,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
           <PositionsTable openBets={openBets} pastBets={pastBets} openRisk={reservedRisk} />
         </section>
 
-        <section className="mt-10 min-h-[72px] rounded-[24px] bg-zinc-950/70 p-4 ring-1 ring-zinc-900">
+        <section className="mt-10 mb-28 min-h-[72px] rounded-[24px] bg-zinc-950/70 p-4 ring-1 ring-zinc-900 md:mb-0">
           <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-600">
             Account ID
           </div>
