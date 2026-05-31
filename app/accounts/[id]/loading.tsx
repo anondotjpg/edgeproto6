@@ -33,7 +33,7 @@ function GoalSkeleton() {
           Goal
         </div>
 
-        <SkeletonBlock className="h-7 w-16 shrink-0 rounded-full" />
+        <SkeletonBlock className="h-5 w-16 shrink-0 rounded-full" />
       </div>
 
       <div className="min-w-0">
@@ -54,7 +54,7 @@ function RuleSkeleton({ label }: { label: string }) {
           <SkeletonBlock className="mt-2 h-4 w-28" />
         </div>
 
-        <SkeletonBlock className="h-7 w-20 rounded-full" />
+        <SkeletonBlock className="h-5 w-16 rounded-full" />
       </div>
 
       <div className="mt-5">
@@ -77,7 +77,7 @@ function TableSectionHeaderSkeleton({ title }: { title: string }) {
       </h2>
 
       {title === "Open" ? (
-        <div className="shrink-0 text-right text-[12px] font-medium text-zinc-500 sm:text-[13px]">
+        <div className="shrink-0 text-right text-[11px] font-medium tracking-[0.02em] text-zinc-500 sm:text-[12px]">
           Open risk <SkeletonBlock className="ml-1 inline-block h-3 w-14 align-middle" />
         </div>
       ) : null}
@@ -139,7 +139,7 @@ function PositionSkeletonRow() {
           </div>
         </div>
 
-        <SkeletonBlock className="h-4 w-12" />
+        <SkeletonBlock className="h-5 w-16 rounded-full" />
         <SkeletonBlock className="ml-auto h-4 w-12" />
         <SkeletonBlock className="ml-auto h-4 w-14" />
         <SkeletonBlock className="ml-auto h-4 w-16" />

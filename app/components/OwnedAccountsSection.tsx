@@ -272,9 +272,9 @@ export default function OwnedAccountsSection() {
   return (
     <div className="mb-6 min-h-[122px] md:pt-[5%] lg:pt-0">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="min-w-0 text-[13px] font-medium uppercase tracking-[0.18em] text-zinc-500">
+        <h2 className="min-w-0 text-base font-semibold tracking-tight text-zinc-100 sm:text-xl">
           Accounts{" "}
-          <span className="tracking-normal text-zinc-600">
+          <span className="text-zinc-500">
             ({showSkeleton ? "0" : showAccounts ? accounts.length : 0})
           </span>
         </h2>

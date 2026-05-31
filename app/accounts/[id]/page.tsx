@@ -104,6 +104,10 @@ function resultLabel(status: string) {
   return status;
 }
 
+
+const COMPACT_BADGE_CLASS =
+  "shrink-0 rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-medium tracking-[0.12em] text-zinc-500";
+
 function accountStatusClassName() {
   return "bg-zinc-900 text-zinc-400";
 }
@@ -275,7 +279,7 @@ function RuleRoomCard({
         </div>
 
         <div
-          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${healthClassName}`}
+          className={COMPACT_BADGE_CLASS}
         >
           {healthLabel}
         </div>
@@ -319,11 +323,7 @@ function EmptyState({
 
 
 function StatusText({ status }: { status: string }) {
-  return (
-    <div className="text-sm font-medium text-zinc-400">
-      {resultLabel(status)}
-    </div>
-  );
+  return <div className={COMPACT_BADGE_CLASS}>{resultLabel(status)}</div>;
 }
 
 function TeamLogo({ bet }: { bet: BetRow }) {
@@ -449,7 +449,7 @@ function TableSectionHeader({
       </h2>
 
       {rightContent ? (
-        <div className="shrink-0 text-right text-[12px] font-medium text-zinc-500 sm:text-[13px]">
+        <div className="shrink-0 text-right text-[11px] font-medium tracking-[0.02em] text-zinc-500 sm:text-[12px]">
           {rightContent}
         </div>
       ) : null}
@@ -786,7 +786,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
                 </div>
 
                 <div
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${accountStatusClassName()}`}
+                  className={COMPACT_BADGE_CLASS}
                 >
                   {resultLabel(accountStatus)}
                 </div>
