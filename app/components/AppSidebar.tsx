@@ -31,7 +31,7 @@ export default function AppSidebar() {
             </div>
           </div>
 
-          <nav className="mt-10 flex flex-col gap-4">
+          <nav className="mt-10 flex flex-col gap-1">
             {NAV_LINKS.map((item) => {
               const isActive = pathname === item.href;
 
@@ -39,13 +39,15 @@ export default function AppSidebar() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={
-                    isActive
-                      ? "rounded-md text-[30px] font-semibold leading-none tracking-tight text-zinc-100 outline-none focus:outline-none focus-visible:outline-none"
-                      : "rounded-md text-[30px] font-semibold leading-none tracking-tight text-zinc-500 outline-none transition-colors hover:text-zinc-200 focus:outline-none focus-visible:outline-none"
-                  }
+                  className={[
+                    "group flex h-[42px] w-full items-center rounded-md outline-none transition-colors",
+                    "focus:outline-none focus-visible:outline-none",
+                    isActive ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-200",
+                  ].join(" ")}
                 >
-                  {item.label}
+                  <span className="text-[30px] font-semibold leading-none tracking-tight">
+                    {item.label}
+                  </span>
                 </Link>
               );
             })}
