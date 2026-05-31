@@ -46,7 +46,7 @@ function GoalSkeleton() {
 
 function RuleSkeleton({ label }: { label: string }) {
   return (
-    <div className="h-[238px] rounded-[26px] bg-zinc-950/80 p-5 ring-1 ring-zinc-900">
+    <div className="h-[178px] rounded-[26px] bg-zinc-950/80 p-5 ring-1 ring-zinc-900">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-[13px] font-medium text-zinc-500">{label}</div>
@@ -65,9 +65,6 @@ function RuleSkeleton({ label }: { label: string }) {
 
         <SkeletonBlock className="h-2 w-full rounded-full" />
       </div>
-
-      <SkeletonBlock className="mt-4 h-3 w-full" />
-      <SkeletonBlock className="mt-2 h-3 w-4/5" />
     </div>
   );
 }
@@ -178,7 +175,7 @@ export default function LoadingAccountPage() {
           </div>
         </section>
 
-        <section className="mt-3 grid h-[488px] gap-3 sm:mt-3 lg:h-[238px] lg:grid-cols-2">
+        <section className="mt-3 grid h-[368px] gap-3 sm:mt-3 lg:h-[178px] lg:grid-cols-2">
           <RuleSkeleton label="Daily loss room" />
           <RuleSkeleton label="Total loss room" />
         </section>

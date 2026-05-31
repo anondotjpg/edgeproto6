@@ -223,18 +223,16 @@ function RuleRoomCard({
   title,
   room,
   limit,
-  description,
   isAccountFailed,
 }: {
   title: string;
   room: number;
   limit: number;
-  description: string;
   isAccountFailed: boolean;
 }) {
   if (isAccountFailed) {
     return (
-      <div className="flex h-[238px] items-center justify-center rounded-[26px] bg-zinc-950/80 p-5 ring-1 ring-zinc-900">
+      <div className="flex h-[178px] items-center justify-center rounded-[26px] bg-zinc-950/80 p-5 ring-1 ring-zinc-900">
         <div className="text-center">
           <div className="text-[13px] font-medium text-zinc-500">{title}</div>
 
@@ -262,7 +260,7 @@ function RuleRoomCard({
   const healthClassName = "bg-zinc-900 text-zinc-400 ring-zinc-800";
 
   return (
-    <div className="h-[238px] rounded-[26px] bg-zinc-950/80 p-5 ring-1 ring-zinc-900">
+    <div className="h-[178px] rounded-[26px] bg-zinc-950/80 p-5 ring-1 ring-zinc-900">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-[13px] font-medium text-zinc-500">{title}</div>
@@ -291,8 +289,6 @@ function RuleRoomCard({
 
         <ProgressBar value={usedPercent} />
       </div>
-
-      <p className="mt-4 text-[13px] leading-6 text-zinc-500">{description}</p>
     </div>
   );
 }
@@ -809,16 +805,11 @@ export default async function AccountPage({ params }: AccountPageProps) {
           </div>
         </section>
 
-        <section className="mt-3 grid h-[488px] gap-3 sm:mt-3 lg:h-[238px] lg:grid-cols-2">
+        <section className="mt-3 grid h-[368px] gap-3 sm:mt-3 lg:h-[178px] lg:grid-cols-2">
           <RuleRoomCard
             title="Daily loss room"
             room={dailyRoom}
             limit={dailyLossLimit}
-            description={`Today started at ${formatMoney(
-              dayStartingBalance
-            )}. If rule equity reaches ${formatMoney(
-              dailyFloor
-            )}, this account fails the daily loss rule.`}
             isAccountFailed={isAccountFailed}
           />
 
@@ -826,11 +817,6 @@ export default async function AccountPage({ params }: AccountPageProps) {
             title="Total loss room"
             room={totalRoom}
             limit={totalLossLimit}
-            description={`This account started at ${formatMoney(
-              startingBalance
-            )}. If rule equity reaches ${formatMoney(
-              totalFloor
-            )}, this account fails the total loss rule.`}
             isAccountFailed={isAccountFailed}
           />
         </section>
