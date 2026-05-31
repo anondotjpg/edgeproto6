@@ -329,7 +329,7 @@ const BetSlipHeader = memo(function BetSlipHeader({
           />
         ) : null}
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 -mt-1">
           <h2
             className={[
               "truncate font-semibold tracking-tight text-zinc-100",
@@ -345,7 +345,7 @@ const BetSlipHeader = memo(function BetSlipHeader({
 
           <p
             className={[
-              "mt-1 truncate text-zinc-400",
+              "mt-[2px] line-clamp-2 text-zinc-400",
               panelMode === "sidebar"
                 ? "text-[13px] leading-[1.2]"
                 : mobileLayout
@@ -586,7 +586,7 @@ const AccountSelectSection = memo(function AccountSelectSection({
 
         {showAccountScrollHint ? (
           <div className="shrink-0 text-[11px] font-medium leading-[18px] text-zinc-500">
-            Scroll to view more
+            Swipe to view more
           </div>
         ) : reserveAccountControlSpace ? (
           <div
