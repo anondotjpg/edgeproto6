@@ -252,7 +252,7 @@ function getAccountDisplayName(account: OwnedAccount) {
 function getMaxRiskAmount(account: OwnedAccount) {
   return Number(
     account.max_risk_amount ??
-      Number(account.starting_balance ?? account.plan_size ?? 0) * 0.05
+      Number(account.starting_balance ?? account.plan_size ?? 0) * 0.05,
   );
 }
 
@@ -631,7 +631,8 @@ const AccountSelectSection = memo(function AccountSelectSection({
             onClick={login}
             className="flex h-[92px] w-full cursor-pointer items-start rounded-2xl border border-zinc-800 bg-black/30 p-4 text-left text-base text-zinc-300"
           >
-            <span className="inline underline cursor-pointer">Sign in</span>&nbsp;to select an account
+            <span className="inline underline cursor-pointer">Sign in</span>
+            &nbsp;to select an account
           </button>
         ) : accounts.length ? (
           <div ref={accountRowRef} className={ACCOUNT_ROW_CLASS}>
@@ -753,7 +754,8 @@ function BetSlipControls({
   const [amountShakeKey, setAmountShakeKey] = useState(0);
 
   const sliderDisabled = maxBetAmount <= 0;
-  const showQuickAmounts = maxBetAmount > 0 && selectedAccountIds.length > 0;
+  const quickAmountsDisabled =
+    maxBetAmount <= 0 || selectedAccountIds.length === 0;
   const showPotentialPayout = amountValue > 0 && possiblePayout !== "—";
 
   const placeBetDisabled =
@@ -819,7 +821,7 @@ function BetSlipControls({
   }
 
   function handleSidebarAmountInputChange(
-    event: ChangeEvent<HTMLInputElement>
+    event: ChangeEvent<HTMLInputElement>,
   ) {
     const rawDigits = event.target.value.replace(/[^\d]/g, "");
 
@@ -899,9 +901,7 @@ function BetSlipControls({
               <motion.div
                 key={amountShakeKey}
                 animate={
-                  amountShakeKey > 0
-                    ? { x: [0, -4, 4, -2, 2, 0] }
-                    : { x: 0 }
+                  amountShakeKey > 0 ? { x: [0, -4, 4, -2, 2, 0] } : { x: 0 }
                 }
                 transition={{ duration: 0.28, ease: "easeOut" }}
                 className="min-w-0 flex-1"
@@ -963,54 +963,34 @@ function BetSlipControls({
           </div>
         )}
 
-        <AnimatePresence initial={false}>
-          {showQuickAmounts ? (
-            <motion.div
-              key="quick-amount-options"
-              initial={{ height: 0, opacity: 0, y: -6 }}
-              animate={{ height: "auto", opacity: 1, y: 0 }}
-              exit={{ height: 0, opacity: 0, y: -6 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              className="overflow-hidden"
-            >
-              <motion.div
-                layout
-                className="mt-4 grid grid-cols-4 gap-2"
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {QUICK_AMOUNT_OPTIONS.map((option, index) => {
-                  const optionAmount = Math.round(maxBetAmount * option.value);
-                  const selected = amountValue === optionAmount;
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          {QUICK_AMOUNT_OPTIONS.map((option) => {
+            const optionAmount = Math.round(maxBetAmount * option.value);
+            const selected =
+              !quickAmountsDisabled && amountValue === optionAmount;
 
-                  return (
-                    <motion.button
-                      key={option.label}
-                      type="button"
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 6, scale: 0.98 }}
-                      transition={{
-                        duration: 0.2,
-                        delay: index * 0.025,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => onQuickAmount(option.value)}
-                      className={[
-                        "h-9 cursor-pointer rounded-lg text-[13px] font-semibold transition-colors",
-                        selected
-                          ? "bg-zinc-700 text-zinc-300"
-                          : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800",
-                      ].join(" ")}
-                    >
-                      {option.label}
-                    </motion.button>
-                  );
-                })}
-              </motion.div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+            return (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => {
+                  if (!quickAmountsDisabled) onQuickAmount(option.value);
+                }}
+                disabled={quickAmountsDisabled}
+                className={[
+                  "h-9 rounded-lg text-[13px] font-semibold transition-colors",
+                  quickAmountsDisabled
+                    ? "cursor-not-allowed bg-zinc-900/45 text-zinc-600"
+                    : selected
+                      ? "cursor-pointer bg-zinc-700 text-zinc-300"
+                      : "cursor-pointer bg-zinc-900 text-zinc-300 hover:bg-zinc-800",
+                ].join(" ")}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
 
         {panelMode !== "sidebar" ? (
           <div
@@ -1226,7 +1206,9 @@ export function BetSlipPanel({
   }, [bet]);
 
   const selectedAccounts = useMemo(() => {
-    return accounts.filter((account) => selectedAccountIds.includes(account.id));
+    return accounts.filter((account) =>
+      selectedAccountIds.includes(account.id),
+    );
   }, [accounts, selectedAccountIds]);
 
   const maxBetAmount = useMemo(() => {
@@ -1273,13 +1255,13 @@ export function BetSlipPanel({
 
       if (stake > maxRiskAmount) {
         return `${getAccountDisplayName(
-          account
+          account,
         )} account max risk per bet is ${formatMoney(maxRiskAmount)}.`;
       }
 
       if (stake > Number(account.current_balance ?? 0)) {
         return `${getAccountDisplayName(account)} account only has ${formatMoney(
-          account.current_balance
+          account.current_balance,
         )} available.`;
       }
     }
@@ -1327,12 +1309,12 @@ export function BetSlipPanel({
         }
 
         if (!cancelled) {
-          const loadedAccounts = data.accounts ?? [];
-          setAccounts(loadedAccounts);
-
-          const activeAccounts = loadedAccounts.filter((account: OwnedAccount) =>
-            ["active", "active_dev"].includes(account.status)
+          const activeAccounts = (data.accounts ?? []).filter(
+            (account: OwnedAccount) =>
+              ["active", "active_dev"].includes(account.status),
           );
+
+          setAccounts(activeAccounts);
 
           if (activeAccounts.length === 1) {
             setSelectedAccountIds([activeAccounts[0].id]);
@@ -1343,7 +1325,7 @@ export function BetSlipPanel({
 
         if (!cancelled) {
           setError(
-            err instanceof Error ? err.message : "Failed to load accounts."
+            err instanceof Error ? err.message : "Failed to load accounts.",
           );
         }
       } finally {
@@ -1377,7 +1359,7 @@ export function BetSlipPanel({
     setSelectedAccountIds((current) =>
       current.includes(accountId)
         ? current.filter((id) => id !== accountId)
-        : [...current, accountId]
+        : [...current, accountId],
     );
   }, []);
 
@@ -1387,12 +1369,12 @@ export function BetSlipPanel({
       const nextRawValue = Number(rawValue ?? 0);
 
       const nextValue = Math.round(
-        Math.min(Math.max(nextRawValue, 0), Math.max(maxBetAmount, 0))
+        Math.min(Math.max(nextRawValue, 0), Math.max(maxBetAmount, 0)),
       );
 
       setAmount(nextValue > 0 ? String(nextValue) : "");
     },
-    [maxBetAmount]
+    [maxBetAmount],
   );
 
   const handleQuickAmount = useCallback(
@@ -1400,7 +1382,7 @@ export function BetSlipPanel({
       const nextValue = Math.round(maxBetAmount * percent);
       setAmount(nextValue > 0 ? String(nextValue) : "");
     },
-    [maxBetAmount]
+    [maxBetAmount],
   );
 
   const placeBet = useCallback(async () => {
@@ -1432,7 +1414,7 @@ export function BetSlipPanel({
 
       if (!currentBet.polymarketConditionId || !currentBet.polymarketTokenId) {
         throw new Error(
-          "Missing Polymarket settlement data. Refresh and try again."
+          "Missing Polymarket settlement data. Refresh and try again.",
         );
       }
 
