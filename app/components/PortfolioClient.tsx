@@ -592,7 +592,7 @@ export default function PortfolioClient() {
             <button
               type="button"
               onClick={login}
-              className="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-950"
+              className="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-950 cursor-pointer"
             >
               Sign in
             </button>
