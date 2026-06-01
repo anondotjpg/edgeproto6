@@ -36,6 +36,9 @@ function GoalSkeleton() {
         <SkeletonBlock className="h-5 w-16 shrink-0 rounded-full" />
       </div>
 
+      {/* heatmap progress bar placeholder */}
+      <SkeletonBlock className="h-2 w-full rounded-full" />
+
       <div className="min-w-0">
         <SkeletonBlock className="h-9 w-40 sm:h-10 sm:w-44" />
         <SkeletonBlock className="mt-2 h-4 w-32" />

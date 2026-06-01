@@ -201,6 +201,30 @@ function ProgressBar({
   );
 }
 
+function GoalProgressBar({ value }: { value: number }) {
+  const width = Math.min(Math.max(value, 0), 100);
+  const empty = 100 - width;
+
+  return (
+    <div className="relative h-2 w-full overflow-hidden rounded-full bg-zinc-900">
+      {/* full heatmap track: red -> orange -> yellow -> green */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background:
+            "linear-gradient(to right, #ef4444, #f97316, #f59e0b, #eab308, #22c55e)",
+        }}
+      />
+
+      {/* dim the unfilled (right) portion */}
+      <div
+        className="absolute inset-y-0 right-0 bg-zinc-950 opacity-50"
+        style={{ width: `${empty}%` }}
+      />
+    </div>
+  );
+}
+
 function MetricCard({
   label,
   value,
@@ -731,6 +755,13 @@ export default async function AccountPage({ params }: AccountPageProps) {
   const dailyFloor = dayStartingBalance - dailyLossLimit;
   const totalFloor = startingBalance - totalLossLimit;
 
+  const goalProgress =
+    profitTargetBalance > startingBalance
+      ? ((ruleEquity - startingBalance) /
+          (profitTargetBalance - startingBalance)) *
+        100
+      : 0;
+
   const allBets = (bets ?? []) as BetRow[];
   const openBets = allBets.filter((bet) => bet.status === "open");
   const pastBets = allBets.filter((bet) => bet.status !== "open");
@@ -805,6 +836,9 @@ export default async function AccountPage({ params }: AccountPageProps) {
                   {resultLabel(accountStatus)}
                 </div>
               </div>
+
+              {/* heatmap progress bar */}
+              <GoalProgressBar value={goalProgress} />
 
               <div className="min-w-0">
                 <div className="truncate pb-1 text-[32px] font-semibold leading-[1.12] tracking-tight text-zinc-100 sm:text-[36px] lg:text-[38px]">
