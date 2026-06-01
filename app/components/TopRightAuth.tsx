@@ -110,7 +110,7 @@ export default function TopRightAuth() {
   const cta = !ready ? (
     <span
       aria-label="Loading account controls"
-      className="inline-flex h-9 w-[126px] shrink-0 animate-pulse rounded-full border border-zinc-800 bg-zinc-900"
+      className="inline-flex h-9 w-[126px] shrink-0 animate-pulse rounded-full bg-zinc-900"
     />
   ) : authenticated ? (
     signedInControls
