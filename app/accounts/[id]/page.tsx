@@ -978,7 +978,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
           <PositionsTable openBets={openBets} pastBets={pastBets} openRisk={reservedRisk} />
         </section>
 
-        <section className="mt-10 mb-28 min-h-[72px] rounded-[24px] bg-zinc-950/70 p-4 ring-1 ring-zinc-900 md:mb-0">
+        <section className="mt-10 min-h-[72px] rounded-[24px] bg-zinc-950/70 p-4 ring-1 ring-zinc-900">
           <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-600">
             Account ID
           </div>
