@@ -214,6 +214,7 @@ function SegmentedProgressBars({
 }) {
   const progress = Math.min(Math.max(value, 0), 100);
   const step = 100 / barCount;
+  const filledBarCount = Math.ceil((progress / 100) * barCount);
 
   const getBarFill = (index: number) => {
     const barStart = index * step;
@@ -237,34 +238,74 @@ function SegmentedProgressBars({
     return `hsl(${hue} 82% 52%)`;
   };
 
+  const getFillDelay = (index: number) => {
+    const lastFilledIndex = Math.max(filledBarCount - 1, 1);
+    const ratio = Math.min(Math.max(index / lastFilledIndex, 0), 1);
+    const delayMs = 55 + index * 10 + Math.pow(ratio, 2.15) * 420;
+
+    return `${Math.round(delayMs)}ms`;
+  };
+
   return (
-    <div className="flex h-8 w-full items-center sm:h-9">
-      <div
-        className="grid h-6 w-full items-stretch gap-1.5 sm:h-7"
-        style={{ gridTemplateColumns: `repeat(${barCount}, minmax(0, 1fr))` }}
-      >
-        {Array.from({ length: barCount }).map((_, index) => {
-          const fill = getBarFill(index);
+    <>
+      <style>{`
+        @keyframes segmented-progress-fill {
+          from {
+            opacity: 0.68;
+          }
+          to {
+            opacity: var(--target-opacity);
+          }
+        }
 
-          return (
-            <div
-              key={index}
-              className="relative min-w-0 overflow-hidden rounded-full bg-zinc-900"
-            >
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{ backgroundColor: getBarColor(index) }}
-              />
+        @media (prefers-reduced-motion: reduce) {
+          .segmented-progress-overlay {
+            animation: none !important;
+            opacity: var(--target-opacity) !important;
+          }
+        }
+      `}</style>
 
+      <div className="flex h-8 w-full items-center sm:h-9">
+        <div
+          className="grid h-6 w-full items-stretch gap-1.5 sm:h-7"
+          style={{ gridTemplateColumns: `repeat(${barCount}, minmax(0, 1fr))` }}
+        >
+          {Array.from({ length: barCount }).map((_, index) => {
+            const fill = getBarFill(index);
+            const targetOpacity = 0.68 * (1 - fill);
+            const shouldAnimate = fill > 0;
+
+            return (
               <div
-                className="absolute inset-0 rounded-full bg-zinc-950"
-                style={{ opacity: 0.68 * (1 - fill) }}
-              />
-            </div>
-          );
-        })}
+                key={index}
+                className="relative min-w-0 overflow-hidden rounded-full bg-zinc-900"
+              >
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{ backgroundColor: getBarColor(index) }}
+                />
+
+                <div
+                  className="segmented-progress-overlay absolute inset-0 rounded-full bg-zinc-950"
+                  style={
+                    {
+                      "--target-opacity": targetOpacity.toString(),
+                      animation: shouldAnimate
+                        ? "segmented-progress-fill 340ms cubic-bezier(0.16, 1, 0.3, 1) forwards"
+                        : undefined,
+                      animationDelay: shouldAnimate ? getFillDelay(index) : undefined,
+                      opacity: shouldAnimate ? 0.68 : targetOpacity,
+                      willChange: shouldAnimate ? "opacity" : undefined,
+                    } as React.CSSProperties
+                  }
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
