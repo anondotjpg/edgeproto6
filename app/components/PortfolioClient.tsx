@@ -63,6 +63,13 @@ function formatMoneyTwo(value: number | null | undefined) {
   })}`;
 }
 
+function formatSignedMoneyTwo(value: number | null | undefined) {
+  const safeValue = Number(value ?? 0);
+  const sign = safeValue > 0 ? "+" : safeValue < 0 ? "-" : "";
+
+  return `${sign}${formatMoneyTwo(Math.abs(safeValue))}`;
+}
+
 function formatCompactAccountSize(value: number | null | undefined) {
   const size = Number(value ?? 0);
 
@@ -405,7 +412,7 @@ function PastBetRow({ bet }: { bet: Bet }) {
         <MobileValueGrid
           status={resultLabel(displayStatus)}
           stake={formatMoneyInteger(bet.stake)}
-          result={pnl === null ? "—" : formatMoneyTwo(pnl)}
+          result={pnl === null ? "—" : formatSignedMoneyTwo(pnl)}
           resultLabel="P/L"
           resultTone={pnlTone}
         />
@@ -441,7 +448,7 @@ function PastBetRow({ bet }: { bet: Bet }) {
                 : "text-zinc-100",
           ].join(" ")}
         >
-          {pnl === null ? "—" : formatMoneyTwo(pnl)}
+          {pnl === null ? "—" : formatSignedMoneyTwo(pnl)}
         </div>
       </div>
     </div>

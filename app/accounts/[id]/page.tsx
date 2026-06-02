@@ -50,9 +50,9 @@ function formatMoneyInteger(value: number | null | undefined) {
 
 function formatSignedMoney(value: number | null | undefined) {
   const safeValue = Number(value ?? 0);
-  const prefix = safeValue > 0 ? "+" : "";
+  const sign = safeValue > 0 ? "+" : safeValue < 0 ? "-" : "";
 
-  return `${prefix}${formatMoney(safeValue)}`;
+  return `${sign}${formatMoney(Math.abs(safeValue))}`;
 }
 
 function formatOdds(odds: number | null | undefined) {
