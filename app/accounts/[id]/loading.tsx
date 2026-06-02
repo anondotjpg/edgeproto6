@@ -4,7 +4,7 @@ function SkeletonBlock({ className = "" }: { className?: string }) {
 
 function TopSummarySkeleton() {
   return (
-    <div className="flex h-[142px] min-w-0 flex-col justify-between overflow-hidden lg:h-[158px]">
+    <div className="flex min-h-[142px] min-w-0 flex-col justify-between overflow-visible lg:min-h-[166px]">
       <div className="min-w-0">
         <div className="flex h-[36px] max-w-full items-start overflow-hidden sm:h-[42px] lg:h-[44px]">
           <SkeletonBlock className="h-8 w-52 max-w-full sm:h-9 sm:w-64" />
@@ -27,9 +27,9 @@ function TopSummarySkeleton() {
 
 function BarsSkeleton({ barCount }: { barCount: number }) {
   return (
-    <div className="flex h-10 w-full items-center sm:h-11">
+    <div className="flex h-8 w-full items-center sm:h-9">
       <div
-        className="grid h-7 w-full items-stretch gap-1.5 sm:h-[31px]"
+        className="grid h-6 w-full items-stretch gap-1.5 sm:h-7"
         style={{ gridTemplateColumns: `repeat(${barCount}, minmax(0, 1fr))` }}
       >
         {Array.from({ length: barCount }).map((_, index) => (
@@ -64,19 +64,19 @@ function GoalBarsSkeleton() {
 
 function GoalSkeleton() {
   return (
-    <div className="flex h-[158px] flex-col rounded-[26px] bg-zinc-950/80 p-5 ring-1 ring-zinc-900">
+    <div className="flex min-h-[166px] flex-col rounded-[26px] bg-zinc-950/80 px-5 py-4 ring-1 ring-zinc-900 lg:ring-0">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-[17px] font-medium leading-none text-zinc-500">
+          <div className="text-[17px] font-medium leading-tight text-zinc-500">
             Goal
           </div>
 
-          <SkeletonBlock className="mt-2 h-7 w-36 sm:w-40" />
-          <SkeletonBlock className="mt-2 h-4 w-32" />
+          <SkeletonBlock className="mt-2 h-[34px] w-36 sm:w-40" />
+          <SkeletonBlock className="mt-1 h-4 w-32" />
         </div>
       </div>
 
-      <div className="mt-auto pt-3">
+      <div className="mt-auto pt-2">
         <GoalBarsSkeleton />
       </div>
     </div>
@@ -89,21 +89,21 @@ function LossRuleBarsSkeleton() {
 
 function RuleSkeleton({ label }: { label: string }) {
   return (
-    <div className="flex h-[158px] flex-col rounded-[26px] bg-zinc-950/80 p-5 ring-1 ring-zinc-900">
+    <div className="flex min-h-[166px] flex-col rounded-[26px] bg-zinc-950/80 px-5 py-4 ring-1 ring-zinc-900">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-[17px] font-medium leading-none text-zinc-500">
+          <div className="text-[17px] font-medium leading-tight text-zinc-500">
             {label}
           </div>
 
-          <SkeletonBlock className="mt-2 h-7 w-36 sm:w-40" />
-          <SkeletonBlock className="mt-2 h-4 w-32" />
+          <SkeletonBlock className="mt-2 h-[34px] w-36 sm:w-40" />
+          <SkeletonBlock className="mt-1 h-4 w-32" />
         </div>
 
         <SkeletonBlock className="h-5 w-16 shrink-0 rounded-full" />
       </div>
 
-      <div className="mt-auto pt-3">
+      <div className="mt-auto pt-2">
         <LossRuleBarsSkeleton />
       </div>
     </div>
