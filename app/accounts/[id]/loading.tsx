@@ -138,32 +138,32 @@ function TableHeader({ labels }: { labels: string[] }) {
 
 function PositionSkeletonRow() {
   return (
-    <div className="border-b border-zinc-900/80 px-3 py-2.5 text-sm last:border-b-0 sm:px-5 sm:py-3">
+    <div className="border-b border-zinc-900/80 px-3 py-3 text-sm last:border-b-0 sm:px-5">
       <div className="lg:hidden">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <SkeletonBlock className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9" />
+        <div className="flex min-w-0 items-start gap-3">
+          <SkeletonBlock className="h-9 w-9 shrink-0 rounded-lg" />
 
           <div className="min-w-0 flex-1 pr-2">
-            <SkeletonBlock className="h-4 w-28" />
-            <SkeletonBlock className="mt-1.5 h-3 w-24" />
+            <SkeletonBlock className="h-5 w-32" />
+            <SkeletonBlock className="mt-1.5 h-4 w-28" />
           </div>
 
-          <SkeletonBlock className="mt-px h-4 w-12 shrink-0" />
+          <SkeletonBlock className="mt-0 h-5 w-14 shrink-0" />
         </div>
 
-        <div className="mt-2 flex justify-end pl-[42px] text-[11px] leading-none">
-          <div className="grid w-full max-w-[190px] grid-cols-3 gap-1.5 text-right">
+        <div className="mt-2.5 flex justify-end pl-[48px] text-[11px] leading-none">
+          <div className="grid w-full max-w-[225px] grid-cols-3 gap-2 text-right">
             <div>
-              <SkeletonBlock className="ml-auto h-3 w-10" />
-              <SkeletonBlock className="ml-auto mt-2 h-4 w-12" />
+              <SkeletonBlock className="ml-auto h-3 w-12" />
+              <SkeletonBlock className="ml-auto mt-2 h-5 w-14" />
             </div>
             <div>
-              <SkeletonBlock className="ml-auto h-3 w-10" />
-              <SkeletonBlock className="ml-auto mt-2 h-4 w-14" />
+              <SkeletonBlock className="ml-auto h-3 w-12" />
+              <SkeletonBlock className="ml-auto mt-2 h-5 w-16" />
             </div>
             <div>
-              <SkeletonBlock className="ml-auto h-3 w-10" />
-              <SkeletonBlock className="ml-auto mt-2 h-4 w-16" />
+              <SkeletonBlock className="ml-auto h-3 w-12" />
+              <SkeletonBlock className="ml-auto mt-2 h-5 w-20" />
             </div>
           </div>
         </div>

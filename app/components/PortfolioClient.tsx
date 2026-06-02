@@ -166,13 +166,13 @@ function TeamLogo({ bet }: { bet: Bet }) {
       <img
         src={bet.team_logo}
         alt={bet.team_logo_alt || bet.selection}
-        className="h-8 w-8 shrink-0 rounded-md object-contain sm:h-9 sm:w-9"
+        className="h-9 w-9 shrink-0 rounded-md object-contain sm:h-9 sm:w-9"
       />
     );
   }
 
   return (
-    <div className="h-8 w-8 shrink-0 rounded-md bg-zinc-900 sm:h-9 sm:w-9" />
+    <div className="h-9 w-9 shrink-0 rounded-md bg-zinc-900 sm:h-9 sm:w-9" />
   );
 }
 
@@ -202,23 +202,23 @@ function TeamCell({ bet }: { bet: Bet }) {
 
 function MobileBetTop({ bet }: { bet: Bet }) {
   return (
-    <div className="flex min-w-0 items-start gap-2.5">
+    <div className="flex min-w-0 items-start gap-3">
       <TeamLogo bet={bet} />
 
       <div className="min-w-0 flex-1 pr-2">
-        <div className="h-4 truncate text-[14px] font-semibold leading-4 text-zinc-100">
+        <div className="h-5 truncate text-[15px] font-semibold leading-5 text-zinc-100">
           {bet.selection}
         </div>
 
         <Link
           href={`/accounts/${bet.account_id}`}
-          className="mt-1.5 block h-3 truncate text-[11px] font-medium leading-3 text-zinc-500 transition-colors hover:text-zinc-300"
+          className="mt-1 block h-4 truncate text-[12px] font-medium leading-4 text-zinc-500 transition-colors hover:text-zinc-300"
         >
           {getAccountLabel(bet)}
         </Link>
       </div>
 
-      <div className="mt-px h-4 shrink-0 text-right text-[16px] font-semibold leading-4 text-zinc-100">
+      <div className="mt-px h-5 shrink-0 text-right text-[18px] font-semibold leading-5 text-zinc-100">
         {formatOdds(Number(bet.odds))}
       </div>
     </div>
@@ -245,30 +245,30 @@ function TableHeader({ labels }: { labels: string[] }) {
 
 function SkeletonRow() {
   return (
-    <div className="border-b border-zinc-900/80 px-3 py-2.5 last:border-b-0 sm:px-5 sm:py-3">
+    <div className="border-b border-zinc-900/80 px-3 py-3 last:border-b-0 sm:px-5 sm:py-3">
       <div className="lg:hidden">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <SkeletonBlock className="h-8 w-8 rounded-lg" />
+        <div className="flex min-w-0 items-start gap-3">
+          <SkeletonBlock className="h-9 w-9 rounded-lg" />
           <div className="min-w-0 flex-1 pr-2">
-            <SkeletonBlock className="h-4 w-28" />
-            <SkeletonBlock className="mt-1.5 h-3 w-28" />
+            <SkeletonBlock className="h-5 w-32" />
+            <SkeletonBlock className="mt-1 h-4 w-32" />
           </div>
-          <SkeletonBlock className="mt-px h-4 w-12" />
+          <SkeletonBlock className="mt-px h-5 w-14" />
         </div>
 
-        <div className="mt-2 flex justify-end pl-[42px]">
-          <div className="grid w-full max-w-[190px] grid-cols-3 gap-1.5 text-right">
+        <div className="mt-2.5 flex justify-end pl-[48px]">
+          <div className="grid w-full max-w-[225px] grid-cols-3 gap-2 text-right">
             <div>
-              <SkeletonBlock className="ml-auto h-3 w-10" />
-              <SkeletonBlock className="ml-auto mt-2 h-4 w-12" />
+              <SkeletonBlock className="ml-auto h-3 w-12" />
+              <SkeletonBlock className="ml-auto mt-2 h-5 w-14" />
             </div>
             <div>
-              <SkeletonBlock className="ml-auto h-3 w-10" />
-              <SkeletonBlock className="ml-auto mt-2 h-4 w-14" />
+              <SkeletonBlock className="ml-auto h-3 w-12" />
+              <SkeletonBlock className="ml-auto mt-2 h-5 w-16" />
             </div>
             <div>
-              <SkeletonBlock className="ml-auto h-3 w-10" />
-              <SkeletonBlock className="ml-auto mt-2 h-4 w-16" />
+              <SkeletonBlock className="ml-auto h-3 w-12" />
+              <SkeletonBlock className="ml-auto mt-2 h-5 w-[72px]" />
             </div>
           </div>
         </div>
@@ -306,13 +306,13 @@ function MobileValueGrid({
   resultTone?: "positive" | "negative" | "neutral";
 }) {
   return (
-    <div className="mt-2 flex justify-end pl-[42px]">
-      <div className="grid w-full max-w-[190px] grid-cols-3 gap-1.5 text-right">
+    <div className="mt-2.5 flex justify-end pl-[48px]">
+      <div className="grid w-full max-w-[225px] grid-cols-3 gap-2 text-right">
         <div>
           <div className="ml-auto h-3 truncate text-[10px] font-medium uppercase leading-3 tracking-[0.14em] text-zinc-600">
             Status
           </div>
-          <div className="ml-auto mt-2 h-4 truncate text-[11px] font-semibold leading-4 text-zinc-400">
+          <div className="ml-auto mt-2 h-5 truncate text-[13px] font-semibold leading-5 text-zinc-400">
             {status}
           </div>
         </div>
@@ -321,7 +321,7 @@ function MobileValueGrid({
           <div className="ml-auto h-3 truncate text-[10px] font-medium uppercase leading-3 tracking-[0.14em] text-zinc-600">
             Stake
           </div>
-          <div className="ml-auto mt-2 h-4 truncate text-[11px] font-semibold leading-4 text-zinc-100">
+          <div className="ml-auto mt-2 h-5 truncate text-[13px] font-semibold leading-5 text-zinc-100">
             {stake}
           </div>
         </div>
@@ -332,7 +332,7 @@ function MobileValueGrid({
           </div>
           <div
             className={[
-              "ml-auto mt-2 h-4 truncate text-[11px] font-semibold leading-4",
+              "ml-auto mt-2 h-5 truncate text-[13px] font-semibold leading-5",
               resultTone === "positive"
                 ? "text-green-400"
                 : resultTone === "negative"
@@ -352,7 +352,7 @@ function ActiveBetRow({ bet }: { bet: Bet }) {
   const displayStatus = bet.result ?? bet.status;
 
   return (
-    <div className="border-b border-zinc-900/80 px-3 py-2.5 text-sm last:border-b-0 sm:px-5 sm:py-3">
+    <div className="border-b border-zinc-900/80 px-3 py-3 text-sm last:border-b-0 sm:px-5 sm:py-3">
       <div className="lg:hidden">
         <MobileBetTop bet={bet} />
         <MobileValueGrid
@@ -399,7 +399,7 @@ function PastBetRow({ bet }: { bet: Bet }) {
     pnlNumber > 0 ? "positive" : pnlNumber < 0 ? "negative" : "neutral";
 
   return (
-    <div className="border-b border-zinc-900/80 px-3 py-2.5 text-sm last:border-b-0 sm:px-5 sm:py-3">
+    <div className="border-b border-zinc-900/80 px-3 py-3 text-sm last:border-b-0 sm:px-5 sm:py-3">
       <div className="lg:hidden">
         <MobileBetTop bet={bet} />
         <MobileValueGrid
