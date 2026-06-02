@@ -85,7 +85,7 @@ export default function AppSidebar() {
                 mass: 0.75,
               }}
             >
-              <div className="h-[58px] w-[68px] rounded-2xl bg-zinc-900" />
+              <div className="h-[58px] w-[72px] rounded-[18px] bg-zinc-900" />
             </motion.div>
           ) : null}
 
