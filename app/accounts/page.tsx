@@ -199,10 +199,6 @@ function AccountCard({
             shimmerEnabled={shimmerEnabled}
             planKey={planKey}
           />
-
-          <p className="mt-3 text-center text-[7px] font-medium uppercase tracking-[0.18em] text-zinc-500">
-            Pay with card or crypto. Instant activation after payment.
-          </p>
         </div>
       </div>
     </div>
