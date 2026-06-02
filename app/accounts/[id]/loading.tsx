@@ -25,9 +25,26 @@ function TopSummarySkeleton() {
   );
 }
 
+function GoalBarsSkeleton() {
+  const barCount = 28;
+
+  return (
+    <div className="flex h-10 w-full items-center sm:h-11">
+      <div
+        className="grid h-7 w-full items-stretch gap-1.5 sm:h-[31px]"
+        style={{ gridTemplateColumns: `repeat(${barCount}, minmax(0, 1fr))` }}
+      >
+        {Array.from({ length: barCount }).map((_, index) => (
+          <SkeletonBlock key={index} className="min-w-0 rounded-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function GoalSkeleton() {
   return (
-    <div className="flex h-[142px] flex-col justify-between rounded-[26px] bg-black/30 p-5 ring-1 ring-zinc-900 lg:h-[146px]">
+    <div className="flex h-[158px] flex-col justify-between rounded-[26px] bg-black/30 p-5 ring-1 ring-zinc-900 lg:h-[162px]">
       <div className="flex items-start justify-between gap-4">
         <div className="text-[17px] font-medium leading-none text-zinc-500">
           Goal
@@ -36,11 +53,10 @@ function GoalSkeleton() {
         <SkeletonBlock className="h-5 w-16 shrink-0 rounded-full" />
       </div>
 
-      {/* heatmap progress bar placeholder */}
-      <SkeletonBlock className="h-2 w-full rounded-full" />
+      <GoalBarsSkeleton />
 
       <div className="min-w-0">
-        <SkeletonBlock className="h-9 w-40 sm:h-10 sm:w-44" />
+        <SkeletonBlock className="h-7 w-36 sm:h-8 sm:w-40 lg:w-44" />
         <SkeletonBlock className="mt-2 h-4 w-32" />
       </div>
     </div>
