@@ -286,18 +286,18 @@ function MobileMoneylineModalButton({
 }) {
   return (
     <div
-      className="relative rounded-xl bg-zinc-800"
+      className="group relative rounded-xl bg-zinc-800"
       style={{
         paddingBottom: "2px",
       }}
     >
       <BetSlipModal
         {...betData}
-        triggerClassName="flex h-[50px] w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0"
+        triggerClassName="peer flex h-[50px] w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0"
         triggerContentClassName="sr-only"
       />
 
-      <div className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center gap-1.5">
+      <div className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center gap-1.5 transition-transform duration-100 will-change-transform peer-hover:translate-y-[-1px] peer-active:translate-y-0 group-hover:translate-y-[-1px] group-active:translate-y-0">
         <span className="text-[11px] font-bold leading-none tracking-[0.12em] text-zinc-500">
           {ticker}
         </span>
