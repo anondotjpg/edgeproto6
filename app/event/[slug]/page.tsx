@@ -144,7 +144,7 @@ function getLogoClassName(sportKey: string) {
     return "h-14 w-14 object-contain";
   }
 
-  return "h-14 w-14 rounded-md object-contain bg-white/5";
+  return "h-14 w-14 rounded-md object-contain";
 }
 
 function getLogoFallbackClassName(sportKey: string) {
