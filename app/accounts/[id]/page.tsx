@@ -458,7 +458,7 @@ function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="min-h-[154px] bg-zinc-950/70">
+    <div className="flex min-h-[154px] flex-col justify-center bg-zinc-950/70 text-left">
       <div className="text-[17px] font-semibold tracking-tight text-zinc-100">
         {title}
       </div>
