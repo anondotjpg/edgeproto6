@@ -222,9 +222,11 @@ function TeamPanel({
             {info?.name || team}
           </div>
 
-          <div className="mt-1 text-[13px] text-zinc-400">
-            {info?.record || info?.abbreviation || info?.alias || "—"}
-          </div>
+          {info?.record ? (
+            <div className="mt-1 text-[13px] text-zinc-400">
+              {info.record}
+            </div>
+          ) : null}
         </div>
       </div>
 
