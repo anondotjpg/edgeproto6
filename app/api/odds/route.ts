@@ -9,6 +9,8 @@ const LEAGUES = [
   { key: "wnba", label: "WNBA", tag: 100254, teamLeague: "wnba" },
 ] as const;
 
+const MIN_MARKET_VOLUME = 1000;
+
 type LeagueKey = (typeof LEAGUES)[number]["key"];
 
 type OddsOutcome = {
@@ -536,6 +538,15 @@ async function buildGameFromMarket(
   const outcomes = parseStringArray(market.outcomes).map(cleanText);
   const prices = parseStringArray(market.outcomePrices).map(Number);
   const clobTokenIds = parseStringArray(market.clobTokenIds);
+  const marketVolume = parseNumericValue(
+    market.volumeNum,
+    market.volume,
+    market.volumeClob
+  );
+
+  if (marketVolume === null || marketVolume <= MIN_MARKET_VOLUME) {
+    return null;
+  }
 
   if (outcomes.length !== 2 || prices.length !== 2) return null;
 
@@ -607,9 +618,13 @@ async function buildGameFromMarket(
       question: market.question ?? null,
       outcomes,
       clob_token_ids: clobTokenIds,
-      volume: parseNumericValue(market.volumeNum, market.volume, market.volumeClob),
+      volume: marketVolume,
       volume_24hr: parseNumericValue(market.volume24hr, market.volume24hrClob),
-      liquidity: parseNumericValue(market.liquidityNum, market.liquidity, market.liquidityClob),
+      liquidity: parseNumericValue(
+        market.liquidityNum,
+        market.liquidity,
+        market.liquidityClob
+      ),
     },
 
     outcome_token_ids: {
