@@ -63,6 +63,7 @@ export type BetSlipData = {
   impliedPercent: string;
   matchup: string;
   matchupAlias?: string | null;
+  isLive?: boolean;
   polymarketEventId?: string | null;
   polymarketEventSlug?: string | null;
   polymarketMarketId?: string | null;
@@ -100,6 +101,7 @@ function getMatchupDisplayName({
 }: {
   matchup: string;
   matchupAlias?: string | null;
+  isLive?: boolean;
   team: string;
   teamAlias?: string | null;
 }) {
@@ -340,6 +342,7 @@ const BetSlipHeader = memo(function BetSlipHeader({
   teamAlias?: string | null;
   matchup: string;
   matchupAlias?: string | null;
+  isLive?: boolean;
   odds: string;
   impliedPercent: string;
   teamLogo?: string | null;
@@ -442,6 +445,7 @@ const BetSlipHeader = memo(function BetSlipHeader({
 function OffsetPlaceBetButton({
   disabled,
   isPlacing,
+  isGameStarted,
   mobileLayout,
   holdProgress,
   panelMode,
@@ -453,6 +457,7 @@ function OffsetPlaceBetButton({
 }: {
   disabled: boolean;
   isPlacing: boolean;
+  isGameStarted: boolean;
   mobileLayout: boolean;
   holdProgress: number;
   panelMode: "modal" | "sidebar";
@@ -462,6 +467,16 @@ function OffsetPlaceBetButton({
   onPointerLeave: () => void;
   onPointerCancel: () => void;
 }) {
+  const buttonText = isGameStarted
+    ? "Game Started"
+    : isPlacing
+      ? "Placing..."
+      : mobileLayout
+        ? "Hold to Place"
+        : "Place Bet";
+
+  const buttonContent = buttonText;
+
   if (mobileLayout) {
     return (
       <motion.button
@@ -491,7 +506,7 @@ function OffsetPlaceBetButton({
         />
 
         <span className="pointer-events-none relative z-10 select-none">
-          {isPlacing ? "Placing..." : "Hold to Place"}
+          {buttonContent}
         </span>
       </motion.button>
     );
@@ -528,7 +543,7 @@ function OffsetPlaceBetButton({
         ].join(" ")}
       >
         <span className="pointer-events-none relative z-10 select-none">
-          {isPlacing ? "Placing..." : "Place Bet"}
+          {buttonContent}
         </span>
       </motion.button>
     </div>
@@ -765,6 +780,7 @@ function BetSlipControls({
   selectedAccountIds,
   isLoadingAccounts,
   isPlacing,
+  isGameStarted,
   amountValue,
   maxBetAmount,
   possiblePayout,
@@ -786,6 +802,7 @@ function BetSlipControls({
   selectedAccountIds: string[];
   isLoadingAccounts: boolean;
   isPlacing: boolean;
+  isGameStarted: boolean;
   amountValue: number;
   maxBetAmount: number;
   possiblePayout: string;
@@ -806,11 +823,12 @@ function BetSlipControls({
   const [holdProgress, setHoldProgress] = useState(0);
   const [amountShakeKey, setAmountShakeKey] = useState(0);
 
-  const sliderDisabled = maxBetAmount <= 0;
+  const sliderDisabled = isGameStarted || maxBetAmount <= 0;
   const showQuickAmounts = maxBetAmount > 0 && selectedAccountIds.length > 0;
   const showPotentialPayout = amountValue > 0 && possiblePayout !== "—";
 
   const placeBetDisabled =
+    isGameStarted ||
     isPlacing ||
     amountValue <= 0 ||
     !selectedAccountIds.length ||
@@ -1094,6 +1112,7 @@ function BetSlipControls({
       <OffsetPlaceBetButton
         disabled={placeBetDisabled}
         isPlacing={isPlacing}
+        isGameStarted={isGameStarted}
         mobileLayout={mobileLayout}
         holdProgress={holdProgress}
         panelMode={panelMode}
@@ -1116,6 +1135,7 @@ const MemoBetSlipControls = memo(BetSlipControls, (prev, next) => {
     prev.selectedAccountIds === next.selectedAccountIds &&
     prev.isLoadingAccounts === next.isLoadingAccounts &&
     prev.isPlacing === next.isPlacing &&
+    prev.isGameStarted === next.isGameStarted &&
     prev.amountValue === next.amountValue &&
     prev.maxBetAmount === next.maxBetAmount &&
     prev.possiblePayout === next.possiblePayout &&
@@ -1148,6 +1168,7 @@ function BetSlipContent({
   selectedAccountIds,
   isLoadingAccounts,
   isPlacing,
+  isGameStarted,
   amountValue,
   maxBetAmount,
   possiblePayout,
@@ -1166,6 +1187,7 @@ function BetSlipContent({
   teamAlias?: string | null;
   matchup: string;
   matchupAlias?: string | null;
+  isLive?: boolean;
   odds: string;
   impliedPercent: string;
   teamLogo?: string | null;
@@ -1177,6 +1199,7 @@ function BetSlipContent({
   selectedAccountIds: string[];
   isLoadingAccounts: boolean;
   isPlacing: boolean;
+  isGameStarted: boolean;
   amountValue: number;
   maxBetAmount: number;
   possiblePayout: string;
@@ -1214,6 +1237,7 @@ function BetSlipContent({
         selectedAccountIds={selectedAccountIds}
         isLoadingAccounts={isLoadingAccounts}
         isPlacing={isPlacing}
+        isGameStarted={isGameStarted}
         amountValue={amountValue}
         maxBetAmount={maxBetAmount}
         possiblePayout={possiblePayout}
@@ -1256,6 +1280,7 @@ export function BetSlipPanel({
   const numericOdds = parseOdds(bet.odds);
   const stake = Number(amount);
   const amountValue = Number.isFinite(stake) ? stake : 0;
+  const isGameStarted = Boolean(bet.isLive);
 
   useEffect(() => {
     betRef.current = bet;
@@ -1454,6 +1479,10 @@ export function BetSlipPanel({
       setIsPlacing(true);
       setError(null);
 
+      if (currentBet.isLive) {
+        throw new Error("Game already started.");
+      }
+
       if (!selectedAccountIds.length) {
         throw new Error("Select at least one account.");
       }
@@ -1557,6 +1586,7 @@ export function BetSlipPanel({
       selectedAccountIds={selectedAccountIds}
       isLoadingAccounts={isLoadingAccounts}
       isPlacing={isPlacing}
+      isGameStarted={isGameStarted}
       amountValue={amountValue}
       maxBetAmount={maxBetAmount}
       possiblePayout={possiblePayout}

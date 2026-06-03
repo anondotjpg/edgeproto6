@@ -28,6 +28,7 @@ export type Game = {
   slug: string;
   sport_key: string;
   commence_time: string;
+  isLive: boolean;
   home_team: string;
   away_team: string;
   home_team_info?: TeamInfo;
@@ -128,4 +129,4 @@ export default async function Home({
       selectedLeagueMeta={selectedLeagueMeta}
     />
   );
-}
+};

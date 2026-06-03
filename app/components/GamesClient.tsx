@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { FaChevronRight } from "react-icons/fa";
+import { FaChevronRight, FaLock } from "react-icons/fa";
 import LastUpdatedAgo from "./LastUpdatedAgo";
 import LeagueTabs from "./LeagueTabs";
 import BetSlipModal, { BetSlipPanel, type BetSlipData } from "./BetSlipModal";
@@ -49,6 +49,12 @@ type TeamInfo = {
 
 type BetSlipDataWithTeamAlias = BetSlipData & {
   teamAlias?: string | null;
+  isLive?: boolean;
+};
+
+type GameWithLiveStatus = Game & {
+  isLive?: boolean;
+  is_live?: boolean;
 };
 
 function getMarket(bookmaker: Bookmaker | undefined, marketKey: string) {
@@ -190,6 +196,26 @@ function getLogoFallbackClassName(sportKey: string) {
     : "h-9 w-9 rounded-sm bg-zinc-950 xl:h-7 xl:w-7";
 }
 
+function getGameIsLive(game: Game): boolean {
+  const gameWithLiveStatus = game as GameWithLiveStatus;
+
+  if (typeof gameWithLiveStatus.isLive === "boolean") {
+    return gameWithLiveStatus.isLive;
+  }
+
+  if (typeof gameWithLiveStatus.is_live === "boolean") {
+    return gameWithLiveStatus.is_live;
+  }
+
+  const startTimestamp = Date.parse(game.commence_time);
+
+  if (!Number.isFinite(startTimestamp)) {
+    return false;
+  }
+
+  return startTimestamp <= Date.now();
+}
+
 function buildBetData({
   game,
   team,
@@ -218,6 +244,7 @@ function buildBetData({
     market: "h2h",
     odds,
     impliedPercent,
+    isLive: getGameIsLive(game),
     matchup: `${game.away_team} vs. ${game.home_team}`,
     matchupAlias: getMatchupDisplayName(game),
     polymarketEventId: game.polymarket?.event_id ?? null,
@@ -275,16 +302,19 @@ function TeamRow({
 
 function MoneylineFace({
   selected,
+  isLive,
   children,
 }: {
   selected: boolean;
+  isLive?: boolean;
   children: ReactNode;
 }) {
   return (
     <div
-      className={["rounded-xl", selected ? "bg-zinc-600" : "bg-zinc-800"].join(
-        " "
-      )}
+      className={[
+        "rounded-xl",
+        isLive ? "bg-zinc-900" : selected ? "bg-zinc-600" : "bg-zinc-800",
+      ].join(" ")}
       style={{
         paddingBottom: "2px",
       }}
@@ -292,9 +322,11 @@ function MoneylineFace({
       <div
         className={[
           "flex h-[42px] w-full translate-y-[-2px] items-center justify-center overflow-hidden rounded-xl border px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
-          selected
-            ? "border-zinc-600 bg-zinc-700"
-            : "border-zinc-800 bg-zinc-900",
+          isLive
+            ? "border-zinc-800 bg-zinc-950/80"
+            : selected
+              ? "border-zinc-600 bg-zinc-700"
+              : "border-zinc-800 bg-zinc-900",
         ].join(" ")}
       >
         {children}
@@ -312,25 +344,39 @@ function MobileMoneylineModalButton({
 }) {
   return (
     <div
-      className="group relative rounded-xl bg-zinc-800"
+      className={[
+        "group relative rounded-xl",
+        betData.isLive ? "bg-zinc-900" : "bg-zinc-800",
+      ].join(" ")}
       style={{
         paddingBottom: "2px",
       }}
     >
       <BetSlipModal
         {...betData}
-        triggerClassName="peer flex h-[50px] w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0"
+        triggerClassName={[
+          "peer flex h-[50px] w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
+          betData.isLive
+            ? "border-zinc-800 bg-zinc-950/80"
+            : "border-zinc-800 bg-zinc-900",
+        ].join(" ")}
         triggerContentClassName="sr-only"
       />
 
       <div className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center gap-1.5 transition-transform duration-100 will-change-transform peer-hover:translate-y-[-1px] peer-active:translate-y-0 group-hover:translate-y-[-1px] group-active:translate-y-0">
-        <span className="text-[11px] font-bold leading-none tracking-[0.12em] text-zinc-500">
-          {ticker}
-        </span>
+        {betData.isLive ? (
+          <FaLock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+        ) : (
+          <>
+            <span className="text-[11px] font-bold leading-none tracking-[0.12em] text-zinc-500">
+              {ticker}
+            </span>
 
-        <span className="text-[20px] font-bold leading-none tracking-tight text-zinc-100">
-          {betData.odds}
-        </span>
+            <span className="text-[20px] font-bold leading-none tracking-tight text-zinc-100">
+              {betData.odds}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -353,6 +399,7 @@ function MoneylineCell({
 }) {
   const teamInfo = side === "away" ? game.away_team_info : game.home_team_info;
   const betData = buildBetData({ game, team, outcome, side, info: teamInfo });
+  const isLive = Boolean(betData.isLive);
 
   return (
     <button
@@ -360,10 +407,14 @@ function MoneylineCell({
       onClick={() => onSelect(betData)}
       className="block w-full cursor-pointer"
     >
-      <MoneylineFace selected={selected}>
-        <span className="text-[13px] font-semibold leading-none tracking-tight text-zinc-100">
-          {betData.odds}
-        </span>
+      <MoneylineFace selected={selected} isLive={isLive}>
+        {isLive ? (
+          <FaLock className="h-3.5 w-3.5 text-zinc-500" />
+        ) : (
+          <span className="text-[13px] font-semibold leading-none tracking-tight text-zinc-100">
+            {betData.odds}
+          </span>
+        )}
       </MoneylineFace>
     </button>
   );
