@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import Link from "next/link";
 import { FiArrowUpRight } from "react-icons/fi";
+import { FaLock } from "react-icons/fa";
 import PriceHistoryChart from "./PriceHistoryChart";
 import BackButton from "./BackButton";
 import BetSlipModal from "@/app/components/BetSlipModal";
@@ -38,6 +39,7 @@ type Game = {
   sport_key: string;
   sport_title: string;
   commence_time: string;
+  isLive?: boolean;
   home_team: string;
   away_team: string;
   home_team_info?: TeamInfo;
@@ -170,6 +172,20 @@ function getMatchupDisplayName(game: Game) {
   )} vs. ${getTeamDisplayName(game.home_team, game.home_team_info)}`;
 }
 
+function getGameIsLive(game: Game): boolean {
+  if (typeof game.isLive === "boolean") {
+    return game.isLive;
+  }
+
+  const startTimestamp = Date.parse(game.commence_time);
+
+  if (!Number.isFinite(startTimestamp)) {
+    return false;
+  }
+
+  return startTimestamp <= Date.now();
+}
+
 function TeamPanel({
   team,
   info,
@@ -187,6 +203,7 @@ function TeamPanel({
 }) {
   const impliedPercent = formatImpliedPercent(price);
   const americanOdds = formatPrice(price);
+  const isLive = getGameIsLive(game);
 
   const selectedTeamInfo =
     side === "away" ? game.away_team_info : game.home_team_info;
@@ -208,6 +225,7 @@ function TeamPanel({
     market: "h2h",
     odds: americanOdds,
     impliedPercent,
+    isLive,
     matchup: `${game.away_team} vs. ${game.home_team}`,
     matchupAlias: getMatchupDisplayName(game),
     polymarketEventId: game.polymarket?.event_id ?? null,
@@ -265,16 +283,34 @@ function TeamPanel({
           </div>
 
           <div
-            className="rounded-xl bg-zinc-800"
+            className={[
+              "relative rounded-xl",
+              isLive ? "bg-zinc-900" : "bg-zinc-800",
+            ].join(" ")}
             style={{
               paddingBottom: "2px",
             }}
           >
             <BetSlipModal
               {...betData}
-              triggerClassName="flex h-[42px] min-w-[84px] translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0"
-              triggerContentClassName="text-[13px] font-semibold leading-none tracking-tight text-zinc-100"
+              triggerClassName={[
+                "flex h-[42px] min-w-[84px] translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
+                isLive
+                  ? "border-zinc-800 bg-zinc-950/80"
+                  : "border-zinc-800 bg-zinc-900",
+              ].join(" ")}
+              triggerContentClassName={
+                isLive
+                  ? "sr-only"
+                  : "text-[13px] font-semibold leading-none tracking-tight text-zinc-100"
+              }
             />
+
+            {isLive ? (
+              <div className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center">
+                <FaLock className="h-3.5 w-3.5 text-zinc-500" />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

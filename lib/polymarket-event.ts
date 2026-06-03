@@ -52,6 +52,7 @@ export type EventOdds = {
   sport_key: string;
   sport_title: string;
   commence_time: string;
+  isLive: boolean;
   home_team: string;
   away_team: string;
   home_team_info?: TeamInfo;
@@ -203,6 +204,16 @@ function isWithinLast24HoursFromNowUtc(dateString: string): boolean {
   const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
   return timestamp >= nowUtcMs - twentyFourHoursMs;
+}
+
+function hasGameStarted(dateString: string): boolean {
+  const timestamp = Date.parse(dateString);
+
+  if (!Number.isFinite(timestamp)) {
+    return false;
+  }
+
+  return timestamp <= Date.now();
 }
 
 function extractSlugTokens(
@@ -517,6 +528,7 @@ async function buildGameFromMarket(
     sport_key: league.key,
     sport_title: league.label,
     commence_time: commenceTime,
+    isLive: hasGameStarted(commenceTime),
     home_team: outcomes[homeIndex],
     away_team: outcomes[awayIndex],
     home_team_info: homeResolved.team
