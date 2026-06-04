@@ -431,7 +431,7 @@ const BetSlipHeader = memo(function BetSlipHeader({
 
         <div
           className={[
-            "-mt-1 font-semibold leading-none text-zinc-500",
+            "-mt-1 font-semibold leading-none text-zinc-500 hidden",
             panelMode === "sidebar" ? "text-[18px]" : "text-[22px]",
           ].join(" ")}
         >
