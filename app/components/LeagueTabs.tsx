@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { FiChevronDown } from "react-icons/fi";
 
 type LeagueTab = {
@@ -36,35 +36,48 @@ export default function LeagueTabs({
             <span>{selectedItem?.label ?? "League"}</span>
             <FiChevronDown
               className={[
-                "h-4 w-4 text-zinc-500 transition-transform",
+                "h-4 w-4 text-zinc-500 transition-transform duration-200 ease-out",
                 open ? "rotate-180" : "",
               ].join(" ")}
             />
           </button>
 
-          {open ? (
-            <div className="absolute left-4 top-[62px] w-[180px] overflow-hidden rounded-2xl border border-zinc-800 bg-[#09090b]/95 p-1.5 shadow-2xl backdrop-blur-md">
-              {leagues.map((item) => {
-                const isActive = item.league === selectedLeague;
+          <AnimatePresence initial={false}>
+            {open ? (
+              <motion.div
+                key="league-mobile-dropdown"
+                initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                transition={{
+                  duration: 0.16,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                style={{ transformOrigin: "top left" }}
+                className="absolute left-4 top-[62px] w-[180px] overflow-hidden rounded-2xl border border-zinc-800 bg-[#09090b]/95 p-1.5 shadow-2xl backdrop-blur-md"
+              >
+                {leagues.map((item) => {
+                  const isActive = item.league === selectedLeague;
 
-                return (
-                  <Link
-                    key={item.league}
-                    href={`/?league=${item.league}`}
-                    onClick={() => setOpen(false)}
-                    className={[
-                      "flex h-10 items-center rounded-xl px-3 text-[13px] font-bold transition-colors active:bg-zinc-800",
-                      isActive
-                        ? "bg-zinc-800 text-zinc-100"
-                        : "text-zinc-500 hover:bg-zinc-900/70 hover:text-zinc-200",
-                    ].join(" ")}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
-          ) : null}
+                  return (
+                    <Link
+                      key={item.league}
+                      href={`/?league=${item.league}`}
+                      onClick={() => setOpen(false)}
+                      className={[
+                        "flex h-10 items-center rounded-xl px-3 text-[13px] font-bold transition-colors active:bg-zinc-800",
+                        isActive
+                          ? "bg-zinc-800 text-zinc-100"
+                          : "text-zinc-500 hover:bg-zinc-900/70 hover:text-zinc-200",
+                      ].join(" ")}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -93,7 +106,7 @@ export default function LeagueTabs({
                     damping: 34,
                     mass: 0.8,
                   }}
-                  className="absolute inset-0 hidden rounded-lg bg-zinc-800 sm:block"
+                  className="absolute inset-0 hidden rounded-lg bg-zinc-800 m-[2px] sm:block"
                 />
               ) : null}
 

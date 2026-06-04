@@ -3,8 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { usePrivy } from "@privy-io/react-auth";
-import { FiLogOut, FiUser } from "react-icons/fi";
+import { FiLogOut } from "react-icons/fi";
 import { RiUserFill } from "react-icons/ri";
 
 export default function TopRightAuth() {
@@ -102,32 +103,42 @@ export default function TopRightAuth() {
           />
         </button>
 
-        {menuOpen ? (
-          <div className="absolute right-0 top-full z-[220] hidden pt-[10px] md:block">
-            <div className="min-w-[168px] whitespace-nowrap rounded-2xl border border-zinc-800 bg-[#09090b]/95 p-1.5 shadow-2xl backdrop-blur-md">
-              <Link
-                href="/accounts"
-                onClick={() => setMenuOpen(false)}
-                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-zinc-200 transition-colors hover:bg-zinc-800 active:bg-zinc-800"
-              >
-                <RiUserFill className="h-4 w-4 text-current" />
-                <span>Accounts</span>
-              </Link>
+        <AnimatePresence initial={false}>
+          {menuOpen ? (
+            <motion.div
+              key="desktop-account-menu"
+              initial={{ opacity: 0, y: -5, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -5, scale: 0.98 }}
+              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              style={{ transformOrigin: "top right" }}
+              className="absolute right-0 top-full z-[220] hidden pt-[10px] md:block"
+            >
+              <div className="min-w-[168px] whitespace-nowrap rounded-2xl border border-zinc-800 bg-[#09090b]/95 p-1.5 shadow-2xl backdrop-blur-md">
+                <Link
+                  href="/accounts"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-zinc-200 transition-colors hover:bg-zinc-800 active:bg-zinc-800"
+                >
+                  <RiUserFill className="h-4 w-4 text-current" />
+                  <span>Accounts</span>
+                </Link>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  logout();
-                }}
-                className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium text-red-400 transition-colors hover:bg-zinc-800 active:bg-zinc-800 whitespace-nowrap"
-              >
-                <FiLogOut className="h-4 w-4 text-current" />
-                <span>Sign out</span>
-              </button>
-            </div>
-          </div>
-        ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    logout();
+                  }}
+                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium text-red-400 transition-colors hover:bg-zinc-800 active:bg-zinc-800 whitespace-nowrap"
+                >
+                  <FiLogOut className="h-4 w-4 text-current" />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </div>
     </>
   );
@@ -163,39 +174,54 @@ export default function TopRightAuth() {
         <div className="pointer-events-auto flex items-center gap-3">{cta}</div>
       </div>
 
-      {authenticated && menuOpen ? (
-        <>
-          <button
-            type="button"
-            aria-label="Close account menu"
-            onClick={() => setMenuOpen(false)}
-            className="fixed inset-0 z-[200] bg-transparent md:hidden"
-          />
-
-          <div className="fixed right-4 top-[72px] z-[210] min-w-[168px] whitespace-nowrap rounded-2xl border border-zinc-800 bg-[#09090b]/95 p-1.5 shadow-2xl backdrop-blur-md md:hidden">
-            <Link
-              href="/accounts"
-              onClick={() => setMenuOpen(false)}
-              className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-zinc-200 transition-colors active:bg-zinc-800"
-            >
-              <RiUserFill className="h-4 w-4 text-current" />
-              <span>Accounts</span>
-            </Link>
-
-            <button
+      <AnimatePresence initial={false}>
+        {authenticated && menuOpen ? (
+          <>
+            <motion.button
+              key="mobile-account-menu-backdrop"
               type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                logout();
-              }}
-              className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium text-red-400 transition-colors active:bg-zinc-800 whitespace-nowrap"
+              aria-label="Close account menu"
+              onClick={() => setMenuOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.14, ease: "easeOut" }}
+              className="fixed inset-0 z-[200] bg-transparent md:hidden"
+            />
+
+            <motion.div
+              key="mobile-account-menu"
+              initial={{ opacity: 0, y: -5, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -5, scale: 0.98 }}
+              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              style={{ transformOrigin: "top right" }}
+              className="fixed right-4 top-[72px] z-[210] min-w-[168px] whitespace-nowrap rounded-2xl border border-zinc-800 bg-[#09090b]/95 p-1.5 shadow-2xl backdrop-blur-md md:hidden"
             >
-              <FiLogOut className="h-4 w-4 text-current" />
-              <span>Sign out</span>
-            </button>
-          </div>
-        </>
-      ) : null}
+              <Link
+                href="/accounts"
+                onClick={() => setMenuOpen(false)}
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-zinc-200 transition-colors active:bg-zinc-800"
+              >
+                <RiUserFill className="h-4 w-4 text-current" />
+                <span>Accounts</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  logout();
+                }}
+                className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium text-red-400 transition-colors active:bg-zinc-800 whitespace-nowrap"
+              >
+                <FiLogOut className="h-4 w-4 text-current" />
+                <span>Sign out</span>
+              </button>
+            </motion.div>
+          </>
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }
