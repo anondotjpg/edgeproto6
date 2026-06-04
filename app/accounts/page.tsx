@@ -201,7 +201,7 @@ function AccountCard({
           />
 
           <p className="mt-3 text-center text-[7px] font-medium uppercase tracking-[0.18em] text-zinc-500">
-            Pay with crypto. Instant activation after payment on-chain received.
+            Pay with crypto. Instant activation after payment received on-chain.
           </p>
         </div>
       </div>
