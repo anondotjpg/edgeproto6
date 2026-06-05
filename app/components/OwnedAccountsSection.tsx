@@ -47,9 +47,6 @@ export default function OwnedAccountsSection() {
   const { ready, authenticated, getAccessToken } = usePrivy();
 
   const rowRef = useRef<HTMLDivElement | null>(null);
-  const scrollMaskTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
   const [accounts, setAccounts] = useState<ExistingAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +56,6 @@ export default function OwnedAccountsSection() {
   const [canScrollBack, setCanScrollBack] = useState(false);
   const [canScrollForward, setCanScrollForward] = useState(false);
   const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false);
-  const [isScrollMaskVisible, setIsScrollMaskVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,20 +123,6 @@ export default function OwnedAccountsSection() {
     setCanScrollForward(row.scrollLeft < maxScrollLeft - 2);
   }
 
-  function activateScrollMask() {
-    if (accounts.length <= 1) return;
-
-    setIsScrollMaskVisible(true);
-
-    if (scrollMaskTimeoutRef.current) {
-      clearTimeout(scrollMaskTimeoutRef.current);
-    }
-
-    scrollMaskTimeoutRef.current = setTimeout(() => {
-      setIsScrollMaskVisible(false);
-    }, 260);
-  }
-
   function getSnapPositions(row: HTMLDivElement) {
     const rowRect = row.getBoundingClientRect();
     const maxScrollLeft = Math.max(0, row.scrollWidth - row.clientWidth);
@@ -166,16 +148,11 @@ export default function OwnedAccountsSection() {
     const row = rowRef.current;
     if (!row) return;
 
-    function handleScroll() {
-      updateScrollState();
-      activateScrollMask();
-    }
-
-    row.addEventListener("scroll", handleScroll, { passive: true });
+    row.addEventListener("scroll", updateScrollState, { passive: true });
     window.addEventListener("resize", updateScrollState);
 
     return () => {
-      row.removeEventListener("scroll", handleScroll);
+      row.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
     };
   }, [accounts.length, isLoading, ready, authenticated]);
@@ -187,14 +164,6 @@ export default function OwnedAccountsSection() {
       window.cancelAnimationFrame(frame);
     };
   }, [accounts.length, isLoading]);
-
-  useEffect(() => {
-    return () => {
-      if (scrollMaskTimeoutRef.current) {
-        clearTimeout(scrollMaskTimeoutRef.current);
-      }
-    };
-  }, []);
 
   async function saveAccountName(accountId: string) {
     if (savingAccountId) return;
@@ -266,15 +235,13 @@ export default function OwnedAccountsSection() {
 
     const rawTargetLeft =
       direction === "forward"
-        ? snapPositions.find((position) => position > currentLeft + buffer) ??
-          maxScrollLeft
-        : [...snapPositions]
+        ? (snapPositions.find((position) => position > currentLeft + buffer) ??
+          maxScrollLeft)
+        : ([...snapPositions]
             .reverse()
-            .find((position) => position < currentLeft - buffer) ?? 0;
+            .find((position) => position < currentLeft - buffer) ?? 0);
 
     const targetLeft = Math.min(Math.max(rawTargetLeft, 0), maxScrollLeft);
-
-    activateScrollMask();
 
     row.scrollTo({
       left: targetLeft,
@@ -285,15 +252,11 @@ export default function OwnedAccountsSection() {
     window.setTimeout(updateScrollState, 420);
   }
 
-  const showAccounts = ready && !isLoading && authenticated && accounts.length > 0;
+  const showAccounts =
+    ready && !isLoading && authenticated && accounts.length > 0;
   const hasOverflowControls = showAccounts && hasHorizontalOverflow;
   const reserveArrowSpace = hasOverflowControls;
   const showMobileSwipeHint = showAccounts && accounts.length > 1;
-  const showScrollEdgeFade =
-    showAccounts &&
-    accounts.length > 1 &&
-    hasHorizontalOverflow &&
-    isScrollMaskVisible;
 
   return (
     <div
@@ -317,28 +280,18 @@ export default function OwnedAccountsSection() {
         .owned-accounts-reveal {
           animation: ownedAccountsReveal 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-
-        .owned-accounts-edge-fade {
-          transition: opacity 150ms cubic-bezier(0.22, 1, 0.36, 1);
-          will-change: opacity;
-        }
-
         @media (prefers-reduced-motion: reduce) {
           .owned-accounts-reveal {
             animation: none !important;
-          }
-
-          .owned-accounts-edge-fade {
-            transition: none !important;
-          }
-        }
+          }        }
       `}</style>
 
       {showAccounts ? (
         <div className="owned-accounts-reveal">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="min-w-0 text-base font-semibold tracking-tight text-zinc-100 sm:text-xl">
-              Accounts <span className="text-zinc-500">({accounts.length})</span>
+              Accounts{" "}
+              <span className="text-zinc-500">({accounts.length})</span>
             </h2>
 
             {showMobileSwipeHint ? (
@@ -533,25 +486,7 @@ export default function OwnedAccountsSection() {
                   </div>
                 );
               })}
-            </div>
-
-            <div
-              aria-hidden="true"
-              className={[
-                "owned-accounts-edge-fade pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#09090b] via-[#09090b]/80 to-transparent",
-                showScrollEdgeFade && canScrollBack ? "opacity-100" : "opacity-0",
-              ].join(" ")}
-            />
-
-            <div
-              aria-hidden="true"
-              className={[
-                "owned-accounts-edge-fade pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#09090b] via-[#09090b]/80 to-transparent",
-                showScrollEdgeFade && canScrollForward
-                  ? "opacity-100"
-                  : "opacity-0",
-              ].join(" ")}
-            />
+            </div>{" "}
           </div>
         </div>
       ) : null}
