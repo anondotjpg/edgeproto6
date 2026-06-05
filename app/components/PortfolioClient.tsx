@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { usePrivy } from "@privy-io/react-auth";
 
 type AccountJoin = {
@@ -590,44 +590,35 @@ function PortfolioTable({
         onChange={onSelectedViewChange}
       />
 
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={selectedView}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          className="overflow-hidden rounded-2xl border border-zinc-900 bg-zinc-950/80 shadow-sm lg:overflow-x-auto"
-        >
-          {showingOpen ? (
-            <>
-              <TableHeader
-                labels={["Team", "Account", "Status", "Odds", "Stake", "Payout"]}
-              />
-              {openBets.length ? (
-                openBets.map((bet, index) => (
-                  <ActiveBetRow key={bet.id} bet={bet} index={index} />
-                ))
-              ) : (
-                <EmptyOpenPositionsRow />
-              )}
-            </>
-          ) : (
-            <>
-              <TableHeader
-                labels={["Team", "Account", "Status", "Odds", "Stake", "P/L"]}
-              />
-              {pastBets.length ? (
-                pastBets.map((bet, index) => (
-                  <PastBetRow key={bet.id} bet={bet} index={index} />
-                ))
-              ) : (
-                <EmptyTableRow message="No past positions." />
-              )}
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <div className="overflow-hidden rounded-2xl border border-zinc-900 bg-zinc-950/80 shadow-sm lg:overflow-x-auto">
+        {showingOpen ? (
+          <>
+            <TableHeader
+              labels={["Team", "Account", "Status", "Odds", "Stake", "Payout"]}
+            />
+            {openBets.length ? (
+              openBets.map((bet, index) => (
+                <ActiveBetRow key={bet.id} bet={bet} index={index} />
+              ))
+            ) : (
+              <EmptyOpenPositionsRow />
+            )}
+          </>
+        ) : (
+          <>
+            <TableHeader
+              labels={["Team", "Account", "Status", "Odds", "Stake", "P/L"]}
+            />
+            {pastBets.length ? (
+              pastBets.map((bet, index) => (
+                <PastBetRow key={bet.id} bet={bet} index={index} />
+              ))
+            ) : (
+              <EmptyTableRow message="No past positions." />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
