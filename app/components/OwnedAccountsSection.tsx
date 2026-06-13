@@ -35,7 +35,7 @@ const ACCOUNT_ROW_CLASS =
   "flex flex-col gap-2 overflow-visible sm:flex-row sm:snap-x sm:snap-mandatory sm:overflow-x-auto sm:overflow-y-hidden sm:overscroll-x-contain sm:scroll-smooth sm:[-ms-overflow-style:none] sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden";
 
 const ACCOUNT_CARD_CLASS =
-  "group min-h-[82px] w-full rounded-[14px] border border-zinc-900 bg-zinc-950 px-4 py-3 transition-colors hover:border-zinc-800 hover:bg-zinc-900/80 sm:shrink-0 sm:snap-start sm:snap-always";
+  "group min-h-[86px] w-full rounded-[14px] border border-zinc-900 bg-zinc-950 px-4 py-3 transition-colors hover:border-zinc-800 hover:bg-zinc-900/80 sm:shrink-0 sm:snap-start sm:snap-always";
 
 const ACCOUNT_CARD_WIDTH_CLASS =
   "sm:w-[calc((100%_-_8px)_/_2)] xl:w-[calc((100%_-_16px)_/_3)]";
@@ -374,7 +374,7 @@ export default function OwnedAccountsSection() {
     <div
       className={[
         "overflow-visible transition-[height,margin-bottom] duration-[720ms] ease-[cubic-bezier(0.22,1,0.36,1)] sm:overflow-hidden",
-        showAccounts ? "h-auto mb-6 sm:h-[134px]" : "h-[28px]",
+        showAccounts ? "h-auto mb-6 sm:h-[138px]" : "h-[28px]",
       ].join(" ")}
     >
       <style>{`
@@ -458,7 +458,12 @@ export default function OwnedAccountsSection() {
                 const isEditing = editingAccountId === account.id;
                 const isSaving = savingAccountId === account.id;
                 const accountName = account.account_name?.trim();
+                const hasAccountName = Boolean(accountName);
                 const displayName = accountName || sizeLabel;
+                const statusLabel = getStatusLabel(account.status);
+                const subtitle = hasAccountName
+                  ? statusLabel
+                  : `${statusLabel}`;
                 const progress = getAccountGoalProgress(account);
                 const barTone = getMiniGoalBarTone(account);
 
@@ -487,8 +492,8 @@ export default function OwnedAccountsSection() {
                     ].join(" ")}
                   >
                     {isEditing ? (
-                      <div>
-                        <div className="flex min-h-[58px] items-center gap-2">
+                      <div className="flex min-h-[60px] items-center">
+                        <div className="flex w-full items-center gap-2">
                           <input
                             value={draftName}
                             onChange={(event) =>
@@ -538,27 +543,19 @@ export default function OwnedAccountsSection() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex min-h-[58px] items-center justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="truncate text-[17px] font-semibold leading-none tracking-tight text-zinc-100">
-                              {displayName}
-                            </div>
-
-                            <div className="shrink-0 rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-medium tracking-[0.12em] text-zinc-500">
-                              {getStatusLabel(account.status)}
-                            </div>
+                      <div className="flex min-h-[60px] items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-1 flex-col justify-center">
+                          <div className="truncate text-[17px] font-semibold leading-[1.05] tracking-tight text-zinc-100">
+                            {displayName}
                           </div>
 
-                          <div className="mt-[6px] text-[12px] leading-none text-zinc-500">
-                            {accountName
-                              ? `${sizeLabel} · Fee ${feeLabel}`
-                              : `Fee ${feeLabel}`}
+                          <div className="mt-2 truncate text-[12px] font-medium leading-none text-zinc-500">
+                            {subtitle}
                           </div>
                         </div>
 
                         <div className="ml-2 flex shrink-0 flex-col items-center justify-center gap-2">
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex h-7 items-center justify-center gap-2">
                             <button
                               type="button"
                               aria-label="Rename account"
