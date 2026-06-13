@@ -27,6 +27,7 @@ export type TeamInfo = {
   alias?: string;
   record?: string;
   logo?: string;
+  color?: string;
   league?: string;
 };
 
@@ -159,7 +160,11 @@ export default async function EventPage({ params }: EventPageProps) {
           awayMoneyline={awayMoneyline}
           homeMoneyline={homeMoneyline}
         >
-          <PriceHistoryChart slug={game.slug} />
+          <PriceHistoryChart
+            slug={game.slug}
+            awayColor={game.away_team_info?.color}
+            homeColor={game.home_team_info?.color}
+          />
         </EventBettingClient>
       </div>
     </div>

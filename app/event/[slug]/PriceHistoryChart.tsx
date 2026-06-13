@@ -34,6 +34,8 @@ type PriceHistoryResponse = {
 
 type Props = {
   slug: string;
+  awayColor?: string | null;
+  homeColor?: string | null;
 };
 
 type EndDotProps = {
@@ -51,6 +53,38 @@ function formatTimeLabel(timestampSeconds: number) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function normalizeChartColor(color: string | null | undefined, fallback: string) {
+  const clean = color?.trim();
+
+  if (!clean) return fallback;
+
+  if (/^#[0-9a-fA-F]{3}$/.test(clean)) {
+    return clean;
+  }
+
+  if (/^#[0-9a-fA-F]{6}$/.test(clean)) {
+    return clean;
+  }
+
+  if (/^#[0-9a-fA-F]{8}$/.test(clean)) {
+    return clean;
+  }
+
+  if (/^[0-9a-fA-F]{3}$/.test(clean)) {
+    return `#${clean}`;
+  }
+
+  if (/^[0-9a-fA-F]{6}$/.test(clean)) {
+    return `#${clean}`;
+  }
+
+  if (/^[0-9a-fA-F]{8}$/.test(clean)) {
+    return `#${clean}`;
+  }
+
+  return fallback;
 }
 
 function EndDot(props: EndDotProps) {
@@ -96,10 +130,22 @@ function EndDot(props: EndDotProps) {
   );
 }
 
-export default function PriceHistoryChart({ slug }: Props) {
+export default function PriceHistoryChart({
+  slug,
+  awayColor,
+  homeColor,
+}: Props) {
   const [data, setData] = useState<PriceHistoryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showChart, setShowChart] = useState(false);
+
+  const awayStroke = useMemo(() => {
+    return normalizeChartColor(awayColor, "#ffffff");
+  }, [awayColor]);
+
+  const homeStroke = useMemo(() => {
+    return normalizeChartColor(homeColor, "#71717a");
+  }, [homeColor]);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +160,7 @@ export default function PriceHistoryChart({ slug }: Props) {
           `/api/event/${encodeURIComponent(slug)}/price-history`,
           {
             cache: "no-store",
-          }
+          },
         );
 
         const json = (await res.json()) as PriceHistoryResponse;
@@ -150,14 +196,15 @@ export default function PriceHistoryChart({ slug }: Props) {
     if (!data) return [];
 
     const awayMap = new Map<number, number>(
-      data.away.history.map((point) => [point.t, point.p])
+      data.away.history.map((point) => [point.t, point.p]),
     );
+
     const homeMap = new Map<number, number>(
-      data.home.history.map((point) => [point.t, point.p])
+      data.home.history.map((point) => [point.t, point.p]),
     );
 
     const timestamps = Array.from(
-      new Set([...awayMap.keys(), ...homeMap.keys()])
+      new Set([...awayMap.keys(), ...homeMap.keys()]),
     ).sort((a, b) => a - b);
 
     return timestamps.map((t) => ({
@@ -235,13 +282,18 @@ export default function PriceHistoryChart({ slug }: Props) {
                     width={44}
                   />
 
-                  <Legend />
+                  <Legend
+                    wrapperStyle={{
+                      color: "#a1a1aa",
+                      fontSize: 12,
+                    }}
+                  />
 
                   <Line
                     type="linear"
                     dataKey="away"
                     name={data?.away.label}
-                    stroke="#ffffff"
+                    stroke={awayStroke}
                     strokeWidth={2}
                     dot={<EndDot />}
                     activeDot={false}
@@ -252,7 +304,7 @@ export default function PriceHistoryChart({ slug }: Props) {
                     type="linear"
                     dataKey="home"
                     name={data?.home.label}
-                    stroke="#71717a"
+                    stroke={homeStroke}
                     strokeWidth={2}
                     dot={<EndDot />}
                     activeDot={false}

@@ -33,6 +33,7 @@ export type TeamInfo = {
   alias?: string;
   record?: string;
   logo?: string;
+  color?: string;
   league?: string;
 };
 
@@ -134,6 +135,7 @@ type PolymarketTeam = {
   league: string | null;
   record: string | null;
   logo: string | null;
+  color?: string | null;
   abbreviation: string | null;
   alias: string | null;
   createdAt: string | null;
@@ -273,6 +275,7 @@ function makeTeamInfo(team: PolymarketTeam): TeamInfo {
     alias: team.alias || undefined,
     record: team.record || undefined,
     logo: team.logo || undefined,
+    color: team.color || undefined,
     league: team.league || undefined,
   };
 }
@@ -740,7 +743,9 @@ export async function fetchLeagueGames(league: {
       JSON.stringify(
         {
           away: game.away_team,
+          awayColor: game.away_team_info?.color,
           home: game.home_team,
+          homeColor: game.home_team_info?.color,
           commenceTime: game.commence_time,
           isLive: game.isLive,
           marketSlug: game.debug?.marketSlug,
