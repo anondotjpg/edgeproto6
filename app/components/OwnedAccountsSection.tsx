@@ -32,13 +32,13 @@ type ExistingAccount = {
 const MAX_ACCOUNT_NAME_LENGTH = 15;
 
 const ACCOUNT_ROW_CLASS =
-  "flex snap-x snap-mandatory gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "flex flex-col gap-2 overflow-visible sm:flex-row sm:snap-x sm:snap-mandatory sm:overflow-x-auto sm:overflow-y-hidden sm:overscroll-x-contain sm:scroll-smooth sm:[-ms-overflow-style:none] sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden";
 
 const ACCOUNT_CARD_CLASS =
-  "group min-h-[82px] shrink-0 snap-start snap-always rounded-[14px] border border-zinc-900 bg-zinc-950 px-4 py-3 transition-colors hover:border-zinc-800 hover:bg-zinc-900/80";
+  "group min-h-[82px] w-full rounded-[14px] border border-zinc-900 bg-zinc-950 px-4 py-3 transition-colors hover:border-zinc-800 hover:bg-zinc-900/80 sm:shrink-0 sm:snap-start sm:snap-always";
 
 const ACCOUNT_CARD_WIDTH_CLASS =
-  "w-full sm:w-[calc((100%_-_8px)_/_2)] xl:w-[calc((100%_-_16px)_/_3)]";
+  "sm:w-[calc((100%_-_8px)_/_2)] xl:w-[calc((100%_-_16px)_/_3)]";
 
 type MiniGoalBarTone = "goal" | "failed" | "funded";
 
@@ -369,13 +369,12 @@ export default function OwnedAccountsSection() {
     ready && !isLoading && authenticated && accounts.length > 0;
   const hasOverflowControls = showAccounts && hasHorizontalOverflow;
   const reserveArrowSpace = hasOverflowControls;
-  const showMobileSwipeHint = showAccounts && accounts.length > 1;
 
   return (
     <div
       className={[
-        "overflow-hidden transition-[height,margin-bottom] duration-[720ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
-        showAccounts ? "h-[134px] mb-6" : "h-[28px]",
+        "overflow-visible transition-[height,margin-bottom] duration-[720ms] ease-[cubic-bezier(0.22,1,0.36,1)] sm:overflow-hidden",
+        showAccounts ? "h-auto mb-6 sm:h-[134px]" : "h-[28px]",
       ].join(" ")}
     >
       <style>{`
@@ -408,12 +407,6 @@ export default function OwnedAccountsSection() {
               Accounts{" "}
               <span className="text-zinc-500">({accounts.length})</span>
             </h2>
-
-            {showMobileSwipeHint ? (
-              <div className="shrink-0 text-[11px] font-medium text-zinc-500 sm:hidden">
-                Swipe to view more
-              </div>
-            ) : null}
 
             <div
               className={[
