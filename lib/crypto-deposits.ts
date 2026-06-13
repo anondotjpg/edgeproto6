@@ -29,7 +29,7 @@ export const RELAY_ETHEREUM_CHAIN_ID = Number(
 const EVM_NATIVE_CURRENCY = "0x0000000000000000000000000000000000000000";
 const SOLANA_NATIVE_CURRENCY = "11111111111111111111111111111111";
 const BITCOIN_NATIVE_CURRENCY =
-  "bc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmql8k8";
+  "bc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmql8k8";
 
 export const SOLANA_USDC_MINT =
   process.env.RELAY_SOLANA_USDC_MINT ??
