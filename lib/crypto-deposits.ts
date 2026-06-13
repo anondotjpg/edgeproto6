@@ -1,9 +1,8 @@
-import crypto from "crypto";
 import { formatUnits, parseUnits } from "viem";
 import type { PlanKey } from "@/lib/plans";
 
-export type DepositChain = "solana" | "ethereum" | "bitcoin";
-export type DepositAsset = "SOL" | "ETH" | "BTC";
+export type DepositChain = "solana";
+export type DepositAsset = "SOL";
 
 export const CHAIN_CONFIG: Record<
   DepositChain,
@@ -20,42 +19,23 @@ export const CHAIN_CONFIG: Record<
     minConfirmations: 1,
     depositAddressEnv: "SOL_DEPOSIT_ADDRESS",
   },
-  ethereum: {
-    asset: "ETH",
-    decimals: 18,
-    minConfirmations: 12,
-    depositAddressEnv: "ETH_DEPOSIT_ADDRESS",
-  },
-  bitcoin: {
-    asset: "BTC",
-    decimals: 8,
-    minConfirmations: 2,
-    depositAddressEnv: "BTC_DEPOSIT_ADDRESS",
-  },
 };
 
-export const PLAN_CRYPTO_AMOUNTS: Partial<
-  Record<PlanKey, Record<DepositChain, string>>
+export const PLAN_CRYPTO_AMOUNTS: Record<
+  PlanKey,
+  Record<DepositChain, string>
 > = {
   "1000": {
     solana: "0.105",
-    ethereum: "0.004",
-    bitcoin: "0.00015",
   },
   "2000": {
     solana: "0.19",
-    ethereum: "0.007",
-    bitcoin: "0.0003",
   },
   "5000": {
     solana: "0.38",
-    ethereum: "0.014",
-    bitcoin: "0.00055",
   },
   "10000": {
     solana: "0.65",
-    ethereum: "0.025",
-    bitcoin: "0.001",
   },
 };
 
@@ -84,11 +64,8 @@ export function makeInvoiceAmountAtomic({
   }
 
   const decimals = CHAIN_CONFIG[chain].decimals;
-  const baseAtomic = parseUnits(baseAmount, decimals);
 
-  const dust = BigInt(crypto.randomInt(1, 999));
-
-  return baseAtomic + dust;
+  return parseUnits(baseAmount, decimals);
 }
 
 export function atomicToDisplay({

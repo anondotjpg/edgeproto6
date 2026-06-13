@@ -45,40 +45,32 @@ async function findSolanaPayment(
 
   const expectedAmount = BigInt(invoice.expected_amount_atomic);
   const invoiceCreatedAtMs = new Date(invoice.created_at).getTime();
+  const invoiceExpiresAtMs = new Date(invoice.expires_at).getTime();
 
   const connection = new Connection(rpcUrl, "confirmed");
   const depositPubkey = new PublicKey(invoice.deposit_address);
 
   const signatures = await connection.getSignaturesForAddress(depositPubkey, {
-    limit: 20,
+    limit: 15,
   });
 
-  const candidateSignatures = signatures
-    .filter((signature) => {
-      if (signature.err) return false;
-      if (!signature.blockTime) return true;
+  const candidateSignatures = signatures.filter((signature) => {
+    if (signature.err) return false;
+    if (!signature.blockTime) return true;
 
-      const blockTimeMs = signature.blockTime * 1000;
+    const blockTimeMs = signature.blockTime * 1000;
 
-      return blockTimeMs >= invoiceCreatedAtMs - 60_000;
-    })
-    .map((signature) => signature.signature);
+    return (
+      blockTimeMs >= invoiceCreatedAtMs - 60_000 &&
+      blockTimeMs <= invoiceExpiresAtMs + 60_000
+    );
+  });
 
-  if (candidateSignatures.length === 0) {
-    return null;
-  }
-
-  const transactions = await connection.getParsedTransactions(
-    candidateSignatures,
-    {
+  for (const signatureInfo of candidateSignatures) {
+    const tx = await connection.getParsedTransaction(signatureInfo.signature, {
       commitment: "confirmed",
       maxSupportedTransactionVersion: 0,
-    }
-  );
-
-  for (let index = 0; index < transactions.length; index += 1) {
-    const tx = transactions[index];
-    const signature = candidateSignatures[index];
+    });
 
     if (!tx) continue;
 
@@ -106,7 +98,7 @@ async function findSolanaPayment(
       if (lamports !== expectedAmount) continue;
 
       return {
-        txHash: signature,
+        txHash: signatureInfo.signature,
         fromAddress: source,
         toAddress: destination,
         amountAtomic: lamports,
