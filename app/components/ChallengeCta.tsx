@@ -14,20 +14,35 @@ import {
 } from "./ui/drawer";
 
 type ButtonStyle = "gold" | "silver" | "default";
-type DepositStep = "method" | "sender" | "payment";
+type DepositStep = "method" | "payment";
+type DepositChain = "solana" | "ethereum" | "bitcoin";
 
 type DepositInvoice = {
   id: string;
-  chain: "solana";
-  asset: "SOL";
+  provider: "relay";
+  chain: DepositChain;
+  asset: "SOL" | "ETH" | "BTC";
   deposit_address: string;
-  expected_from_address: string;
+  relay_deposit_address?: string | null;
+  relay_request_id?: string | null;
+  relay_status?: string | null;
   expected_amount_display: string;
-  status: "pending" | "paid" | "expired" | "invalid";
+  expected_destination_amount_display?: string | null;
+  destination_address?: string | null;
+  status:
+    | "pending"
+    | "processing"
+    | "paid"
+    | "expired"
+    | "refunded"
+    | "failed"
+    | "invalid";
   expires_at: string;
   tx_hash?: string | null;
   confirmations?: number | null;
   credited_account_id?: string | null;
+  relay_in_tx_hashes?: string[] | null;
+  relay_out_tx_hashes?: string[] | null;
 };
 
 type ChallengeCtaProps = {
@@ -36,6 +51,36 @@ type ChallengeCtaProps = {
   shimmerEnabled: boolean;
   planKey: PlanKey;
 };
+
+const PAYMENT_METHODS: {
+  chain: DepositChain;
+  asset: "SOL" | "ETH" | "BTC";
+  title: string;
+  subtitle: string;
+  network: string;
+}[] = [
+  {
+    chain: "solana",
+    asset: "SOL",
+    title: "Solana",
+    subtitle: "Pay with SOL",
+    network: "Solana",
+  },
+  {
+    chain: "ethereum",
+    asset: "ETH",
+    title: "Ethereum",
+    subtitle: "Pay with ETH",
+    network: "Ethereum mainnet",
+  },
+  {
+    chain: "bitcoin",
+    asset: "BTC",
+    title: "Bitcoin",
+    subtitle: "Pay with BTC",
+    network: "Bitcoin Network",
+  },
+];
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -105,8 +150,17 @@ function shortenAddress(address: string) {
 
 function getStepIndex(step: DepositStep) {
   if (step === "method") return 0;
-  if (step === "sender") return 1;
-  return 2;
+  return 1;
+}
+
+function getStatusLabel(status: DepositInvoice["status"]) {
+  if (status === "processing") return "processing";
+  if (status === "refunded") return "refunded";
+  return status;
+}
+
+function isTerminalStatus(status: DepositInvoice["status"]) {
+  return ["paid", "expired", "failed", "refunded", "invalid"].includes(status);
 }
 
 function StepDots({ step }: { step: DepositStep }) {
@@ -114,7 +168,7 @@ function StepDots({ step }: { step: DepositStep }) {
 
   return (
     <div className="flex items-center gap-1.5">
-      {[0, 1, 2].map((index) => (
+      {[0, 1].map((index) => (
         <div
           key={index}
           className={[
@@ -130,7 +184,7 @@ function StepDots({ step }: { step: DepositStep }) {
 function StatusPill({ status }: { status: DepositInvoice["status"] }) {
   return (
     <div className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[12px] font-semibold capitalize text-zinc-300">
-      {status}
+      {getStatusLabel(status)}
     </div>
   );
 }
@@ -186,27 +240,6 @@ function OffsetButton({
   );
 }
 
-function SecondaryButton({
-  children,
-  onClick,
-  disabled,
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="h-12 cursor-pointer rounded-2xl border border-zinc-800 bg-zinc-950 text-[14px] font-semibold text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
-    >
-      {children}
-    </button>
-  );
-}
-
 async function readJsonResponse(response: Response) {
   const text = await response.text();
 
@@ -222,30 +255,34 @@ async function readJsonResponse(response: Response) {
   }
 }
 
+function PaymentBadge({ asset }: { asset: "SOL" | "ETH" | "BTC" }) {
+  return (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-[11px] font-black text-zinc-200">
+      {asset}
+    </div>
+  );
+}
+
 function CheckoutContent({
   step,
   setStep,
-  fromAddress,
-  setFromAddress,
   invoice,
   error,
   copied,
   countdown,
-  isCreatingInvoice,
+  creatingChain,
   createInvoice,
   copyText,
   openAccount,
 }: {
   step: DepositStep;
   setStep: (step: DepositStep) => void;
-  fromAddress: string;
-  setFromAddress: (value: string) => void;
   invoice: DepositInvoice | null;
   error: string | null;
   copied: string | null;
   countdown: string;
-  isCreatingInvoice: boolean;
-  createInvoice: () => void;
+  creatingChain: DepositChain | null;
+  createInvoice: (chain: DepositChain) => void;
   copyText: (label: string, value: string) => void;
   openAccount: (accountId: string) => void;
 }) {
@@ -265,7 +302,7 @@ function CheckoutContent({
         <StepDots step={step} />
 
         <div className="text-[12px] font-medium text-zinc-500">
-          Step {getStepIndex(step) + 1} of 3
+          Step {getStepIndex(step) + 1} of 2
         </div>
       </div>
 
@@ -286,86 +323,46 @@ function CheckoutContent({
                 </h3>
 
                 <p className="mt-1 text-[13px] leading-5 text-zinc-500">
-                  Pay with SOL. Your deposit amount will be locked for 3 hours
-                  after the next step.
+                  Pay with SOL, ETH, or BTC. Relay converts the payment to USDC
+                  on Solana.
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setStep("sender")}
-                className="mt-5 flex w-full cursor-pointer items-center justify-between rounded-2xl border border-zinc-800 bg-black/30 px-4 py-3.5 text-left transition-colors hover:bg-zinc-900"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <img
-                    src="/sol.png"
-                    alt="SOL"
-                    className="h-9 w-9 shrink-0 rounded-full object-contain"
-                  />
+              <div className="mt-5 grid gap-2.5">
+                {PAYMENT_METHODS.map((method) => {
+                  const loading = creatingChain === method.chain;
+                  const disabled = Boolean(creatingChain);
 
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-semibold text-zinc-100">
-                      Solana
-                    </div>
+                  return (
+                    <button
+                      key={method.chain}
+                      type="button"
+                      onClick={() => createInvoice(method.chain)}
+                      disabled={disabled}
+                      className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-zinc-800 bg-black/30 px-4 py-3.5 text-left transition-colors hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <PaymentBadge asset={method.asset} />
 
-                    <div className="mt-0.5 text-[12px] text-zinc-500">
-                      Fast confirmation with SOL
-                    </div>
-                  </div>
-                </div>
+                        <div className="min-w-0">
+                          <div className="text-[15px] font-semibold text-zinc-100">
+                            {method.title}
+                          </div>
 
-                <div className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[12px] font-bold text-zinc-300">
-                  SOL
-                </div>
-              </button>
+                          <div className="mt-0.5 text-[12px] text-zinc-500">
+                            {loading
+                              ? "Creating deposit..."
+                              : `${method.subtitle} on ${method.network}`}
+                          </div>
+                        </div>
+                      </div>
 
-              <div className="mt-auto pt-5">
-                <OffsetButton onClick={() => setStep("sender")}>
-                  Continue
-                </OffsetButton>
-              </div>
-            </motion.div>
-          ) : null}
-
-          {step === "sender" ? (
-            <motion.div
-              key="sender"
-              initial={{ opacity: 0, x: 18 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -18 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="flex min-h-[390px] flex-col"
-            >
-              <div>
-                <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
-                  Sending wallet
-                </h3>
-
-                <p className="mt-1 text-[13px] leading-5 text-zinc-500">
-                  Paste the Solana wallet address you will send from. The
-                  payment must come from this address.
-                </p>
-              </div>
-
-              <div
-                className="mt-5 rounded-2xl border border-zinc-900 bg-black/30 p-4"
-                data-vaul-no-drag=""
-              >
-                <label className="text-[12px] font-medium text-zinc-500">
-                  Sending from
-                </label>
-
-                <input
-                  value={fromAddress}
-                  onChange={(event) => setFromAddress(event.target.value)}
-                  placeholder="Paste SOL wallet address"
-                  className="mt-2 h-12 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-[14px] text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-zinc-600"
-                />
-
-                <p className="mt-3 text-[12px] leading-5 text-zinc-600">
-                  Do not send from Coinbase, Binance, or another exchange if
-                  sender-address matching is required.
-                </p>
+                      <div className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[12px] font-bold text-zinc-300">
+                        {method.asset}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
 
               {error ? (
@@ -374,21 +371,11 @@ function CheckoutContent({
                 </div>
               ) : null}
 
-              <div className="mt-auto grid grid-cols-[96px_minmax(0,1fr)] gap-2 pt-5">
-                <SecondaryButton
-                  onClick={() => {
-                    setStep("method");
-                  }}
-                >
-                  Back
-                </SecondaryButton>
-
-                <OffsetButton
-                  onClick={createInvoice}
-                  disabled={!fromAddress.trim() || isCreatingInvoice}
-                >
-                  {isCreatingInvoice ? "Creating..." : "Create deposit"}
-                </OffsetButton>
+              <div className="mt-auto pt-5">
+                <p className="text-center text-[12px] leading-5 text-zinc-600">
+                  Do not send Lightning BTC. Use standard Bitcoin Network for
+                  BTC deposits.
+                </p>
               </div>
             </motion.div>
           ) : null}
@@ -405,11 +392,11 @@ function CheckoutContent({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
-                    Send SOL deposit
+                    Send {invoice.asset} deposit
                   </h3>
 
                   <p className="mt-1 text-[13px] leading-5 text-zinc-500">
-                    Send the exact amount below before the timer expires.
+                    Send the exact amount below to the Relay deposit address.
                   </p>
                 </div>
 
@@ -440,7 +427,7 @@ function CheckoutContent({
                     </p>
 
                     <p className="pb-0.5 text-[13px] font-bold text-zinc-400">
-                      SOL
+                      {invoice.asset}
                     </p>
                   </div>
                 </div>
@@ -460,8 +447,8 @@ function CheckoutContent({
                 />
 
                 <InfoCard
-                  label="Required sending address"
-                  value={invoice.expected_from_address}
+                  label="Arrives as"
+                  value={`${invoice.expected_destination_amount_display ?? "—"} USDC on Solana`}
                 />
 
                 <div className="grid grid-cols-2 gap-3">
@@ -475,17 +462,21 @@ function CheckoutContent({
                         ? "Complete"
                         : invoice.status === "expired"
                           ? "Expired"
-                          : countdown}
+                          : isTerminalStatus(invoice.status)
+                            ? getStatusLabel(invoice.status)
+                            : countdown}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-zinc-900 bg-black/30 p-4">
                     <p className="text-[12px] font-medium text-zinc-500">
-                      Confirmations
+                      Relay status
                     </p>
 
-                    <p className="mt-1 text-[18px] font-semibold text-zinc-100">
-                      {invoice.confirmations ?? 0}
+                    <p className="mt-1 truncate text-[18px] font-semibold capitalize text-zinc-100">
+                      {invoice.status === "paid"
+                        ? "Success"
+                        : invoice.relay_status || invoice.status}
                     </p>
                   </div>
                 </div>
@@ -502,11 +493,21 @@ function CheckoutContent({
               ) : (
                 <div className="mt-auto pt-5">
                   <p className="text-center text-[12px] leading-5 text-zinc-600">
-                    Waiting for SOL from{" "}
-                    {shortenAddress(invoice.expected_from_address)}.
+                    Waiting for {invoice.asset} to{" "}
+                    {shortenAddress(invoice.deposit_address)}.
                   </p>
                 </div>
               )}
+
+              {invoice.status !== "paid" ? (
+                <button
+                  type="button"
+                  onClick={() => setStep("method")}
+                  className="mt-3 w-full cursor-pointer text-center text-[12px] font-medium text-zinc-500 hover:text-zinc-300"
+                >
+                  Start a different deposit
+                </button>
+              ) : null}
             </motion.div>
           ) : null}
         </AnimatePresence>
@@ -528,9 +529,8 @@ export default function ChallengeCta({
 
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<DepositStep>("method");
-  const [fromAddress, setFromAddress] = useState("");
   const [invoice, setInvoice] = useState<DepositInvoice | null>(null);
-  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
+  const [creatingChain, setCreatingChain] = useState<DepositChain | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -561,11 +561,10 @@ export default function ChallengeCta({
 
   function resetFlow() {
     setStep("method");
-    setFromAddress("");
     setInvoice(null);
     setError(null);
     setCopied(null);
-    setIsCreatingInvoice(false);
+    setCreatingChain(null);
   }
 
   function openCheckout() {
@@ -597,18 +596,11 @@ export default function ChallengeCta({
     router.push(`/accounts/${accountId}`);
   }
 
-  async function createInvoice() {
-    if (!privyUserId || isCreatingInvoice) return;
-
-    const cleanFromAddress = fromAddress.trim();
-
-    if (!cleanFromAddress) {
-      setError("Paste the wallet address you will send from.");
-      return;
-    }
+  async function createInvoice(chain: DepositChain) {
+    if (!privyUserId || creatingChain) return;
 
     try {
-      setIsCreatingInvoice(true);
+      setCreatingChain(chain);
       setError(null);
 
       const response = await fetch("/api/crypto-deposits/create", {
@@ -618,8 +610,7 @@ export default function ChallengeCta({
         },
         body: JSON.stringify({
           planKey,
-          chain: "solana",
-          fromAddress: cleanFromAddress,
+          chain,
           privyUserId,
           email,
           walletAddress,
@@ -643,7 +634,7 @@ export default function ChallengeCta({
         error instanceof Error ? error.message : "Unable to create deposit.",
       );
     } finally {
-      setIsCreatingInvoice(false);
+      setCreatingChain(null);
     }
   }
 
@@ -672,7 +663,7 @@ export default function ChallengeCta({
 
   useEffect(() => {
     if (!open || !invoice?.id || !privyUserId) return;
-    if (invoice.status === "paid" || invoice.status === "expired") return;
+    if (isTerminalStatus(invoice.status)) return;
 
     let cancelled = false;
 
@@ -702,8 +693,8 @@ export default function ChallengeCta({
         console.log("[deposit-modal] invoice update", {
           id: data.invoice.id,
           status: data.invoice.status,
+          relayStatus: data.invoice.relay_status,
           creditedAccountId: data.invoice.credited_account_id,
-          confirmations: data.invoice.confirmations,
         });
 
         setInvoice(data.invoice);
@@ -733,13 +724,11 @@ export default function ChallengeCta({
     <CheckoutContent
       step={step}
       setStep={setStep}
-      fromAddress={fromAddress}
-      setFromAddress={setFromAddress}
       invoice={invoice}
       error={error}
       copied={copied}
       countdown={countdown}
-      isCreatingInvoice={isCreatingInvoice}
+      creatingChain={creatingChain}
       createInvoice={createInvoice}
       copyText={copyText}
       openAccount={openAccount}

@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import {
-  DepositInvoice,
-  findPaymentForInvoice,
-  hasEnoughConfirmations,
-} from "@/lib/deposit-watchers";
+import { getRelayIntentStatus } from "@/lib/relay";
 
 function isAuthorized(req: Request) {
   const auth = req.headers.get("authorization");
   return auth === `Bearer ${process.env.CRON_SECRET}`;
+}
+
+function mapRelayStatusToInvoiceStatus(status: string) {
+  if (status === "success") return "paid";
+  if (status === "refund") return "refunded";
+  if (status === "failure") return "failed";
+  if (
+    status === "depositing" ||
+    status === "pending" ||
+    status === "submitted" ||
+    status === "delayed"
+  ) {
+    return "processing";
+  }
+
+  return "pending";
 }
 
 async function handleCheckCryptoDeposits(req: Request) {
@@ -17,7 +29,7 @@ async function handleCheckCryptoDeposits(req: Request) {
     method: req.method,
     hasAuthHeader: Boolean(req.headers.get("authorization")),
     hasCronSecretEnv: Boolean(process.env.CRON_SECRET),
-    hasSolanaRpcUrl: Boolean(process.env.SOLANA_RPC_URL),
+    hasRelayApiKey: Boolean(process.env.RELAY_API_KEY),
   });
 
   if (!isAuthorized(req)) {
@@ -31,19 +43,17 @@ async function handleCheckCryptoDeposits(req: Request) {
     .select(
       `
       id,
-      chain,
-      asset,
-      deposit_address,
-      expected_from_address,
-      expected_amount_atomic,
-      created_at,
+      provider,
+      status,
+      relay_request_id,
       expires_at
-    `
+      `,
     )
-    .eq("status", "pending")
-    .eq("chain", "solana")
+    .eq("provider", "relay")
+    .in("status", ["pending", "processing"])
+    .not("relay_request_id", "is", null)
     .order("created_at", { ascending: true })
-    .limit(10);
+    .limit(20);
 
   if (error) {
     console.log("[check-crypto-deposits] invoice query error", error.message);
@@ -54,37 +64,84 @@ async function handleCheckCryptoDeposits(req: Request) {
   const results: {
     invoiceId: string;
     status: string;
+    relayStatus?: string;
     accountId?: string | null;
-    confirmations?: number;
     error?: string;
   }[] = [];
 
-  for (const invoice of invoices as DepositInvoice[]) {
+  for (const invoice of invoices ?? []) {
     try {
-      if (new Date(invoice.expires_at) < now) {
-        await supabaseAdmin
-          .from("crypto_deposit_invoices")
-          .update({
-            status: "expired",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", invoice.id)
-          .eq("status", "pending");
+      const relayRequestId = String(invoice.relay_request_id || "");
 
+      if (!relayRequestId) {
         results.push({
           invoiceId: invoice.id,
-          status: "expired",
+          status: "missing_relay_request_id",
         });
 
         continue;
       }
 
-      const payment = await findPaymentForInvoice(invoice);
+      const relayStatus = await getRelayIntentStatus(relayRequestId);
+      const nextInvoiceStatus = mapRelayStatusToInvoiceStatus(
+        relayStatus.status,
+      );
 
-      if (!payment) {
+      const inTxHashes = relayStatus.inTxHashes ?? [];
+      const outTxHashes = relayStatus.txHashes ?? [];
+
+      if (relayStatus.status === "success") {
+        const { data: accountId, error: rpcError } = await supabaseAdmin.rpc(
+          "mark_relay_crypto_invoice_paid",
+          {
+            p_invoice_id: invoice.id,
+            p_relay_status: relayStatus.status,
+            p_in_tx_hashes: inTxHashes,
+            p_out_tx_hashes: outTxHashes,
+          },
+        );
+
+        if (rpcError) {
+          results.push({
+            invoiceId: invoice.id,
+            status: "credit_failed",
+            relayStatus: relayStatus.status,
+            error: rpcError.message,
+          });
+
+          continue;
+        }
+
         results.push({
           invoiceId: invoice.id,
-          status: "no_payment_found",
+          status: "paid",
+          relayStatus: relayStatus.status,
+          accountId,
+        });
+
+        continue;
+      }
+
+      if (
+        new Date(invoice.expires_at) < now &&
+        relayStatus.status === "waiting"
+      ) {
+        await supabaseAdmin
+          .from("crypto_deposit_invoices")
+          .update({
+            status: "expired",
+            relay_status: relayStatus.status,
+            relay_in_tx_hashes: inTxHashes,
+            relay_out_tx_hashes: outTxHashes,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", invoice.id)
+          .in("status", ["pending", "processing"]);
+
+        results.push({
+          invoiceId: invoice.id,
+          status: "expired",
+          relayStatus: relayStatus.status,
         });
 
         continue;
@@ -93,54 +150,26 @@ async function handleCheckCryptoDeposits(req: Request) {
       await supabaseAdmin
         .from("crypto_deposit_invoices")
         .update({
-          tx_hash: payment.txHash,
-          confirmations: payment.confirmations,
+          status: nextInvoiceStatus,
+          relay_status: relayStatus.status,
+          relay_in_tx_hashes: inTxHashes,
+          relay_out_tx_hashes: outTxHashes,
+          tx_hash: inTxHashes[0] ?? outTxHashes[0] ?? null,
+          confirmations:
+            relayStatus.status === "success" ||
+            relayStatus.status === "pending" ||
+            relayStatus.status === "submitted"
+              ? 1
+              : 0,
           updated_at: new Date().toISOString(),
         })
         .eq("id", invoice.id)
-        .eq("status", "pending");
-
-      if (
-        !hasEnoughConfirmations({
-          chain: invoice.chain,
-          confirmations: payment.confirmations,
-        })
-      ) {
-        results.push({
-          invoiceId: invoice.id,
-          status: "waiting_confirmations",
-          confirmations: payment.confirmations,
-        });
-
-        continue;
-      }
-
-      const { data: accountId, error: rpcError } = await supabaseAdmin.rpc(
-        "mark_crypto_invoice_paid",
-        {
-          p_invoice_id: invoice.id,
-          p_tx_hash: payment.txHash,
-          p_from_address: payment.fromAddress,
-          p_to_address: payment.toAddress,
-          p_amount_atomic: payment.amountAtomic.toString(),
-          p_confirmations: payment.confirmations,
-        }
-      );
-
-      if (rpcError) {
-        results.push({
-          invoiceId: invoice.id,
-          status: "credit_failed",
-          error: rpcError.message,
-        });
-
-        continue;
-      }
+        .in("status", ["pending", "processing"]);
 
       results.push({
         invoiceId: invoice.id,
-        status: "paid",
-        accountId,
+        status: nextInvoiceStatus,
+        relayStatus: relayStatus.status,
       });
     } catch (error) {
       results.push({

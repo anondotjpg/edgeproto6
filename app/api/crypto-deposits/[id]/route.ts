@@ -49,16 +49,23 @@ export async function GET(req: Request, context: RouteContext) {
       .select(
         `
         id,
+        provider,
         chain,
         asset,
         deposit_address,
-        expected_from_address,
+        relay_deposit_address,
+        relay_request_id,
+        relay_status,
         expected_amount_display,
+        expected_destination_amount_display,
+        destination_address,
         status,
         expires_at,
         tx_hash,
         confirmations,
         credited_account_id,
+        relay_in_tx_hashes,
+        relay_out_tx_hashes,
         updated_at
       `,
       )
