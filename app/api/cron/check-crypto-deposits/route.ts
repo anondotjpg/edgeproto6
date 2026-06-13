@@ -5,6 +5,22 @@ import { getRelayIntentStatus } from "@/lib/relay";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+type RelayInvoiceRow = {
+  id: string;
+  provider: string | null;
+  status: string | null;
+  relay_request_id: string | null;
+  expires_at: string | null;
+};
+
+type CronResult = {
+  invoiceId: string;
+  status: string;
+  relayStatus?: string;
+  accountId?: string | null;
+  error?: string;
+};
+
 function isAuthorized(req: Request) {
   const auth = req.headers.get("authorization");
   return auth === `Bearer ${process.env.CRON_SECRET}`;
@@ -27,13 +43,23 @@ function mapRelayStatusToInvoiceStatus(status: string) {
   return "pending";
 }
 
+function isExpired(expiresAt: string | null, now: Date) {
+  if (!expiresAt) return false;
+
+  const expiresAtMs = new Date(expiresAt).getTime();
+
+  if (!Number.isFinite(expiresAtMs)) return false;
+
+  return expiresAtMs < now.getTime();
+}
+
 async function handleCheckCryptoDeposits(req: Request) {
   console.log("[check-crypto-deposits] hit", {
+    version: "relay-no-api-key-v1",
     at: new Date().toISOString(),
     method: req.method,
     hasAuthHeader: Boolean(req.headers.get("authorization")),
     hasCronSecretEnv: Boolean(process.env.CRON_SECRET),
-    hasRelayApiKey: Boolean(process.env.RELAY_API_KEY),
   });
 
   if (!isAuthorized(req)) {
@@ -57,7 +83,8 @@ async function handleCheckCryptoDeposits(req: Request) {
     .in("status", ["pending", "processing"])
     .not("relay_request_id", "is", null)
     .order("created_at", { ascending: true })
-    .limit(20);
+    .limit(20)
+    .returns<RelayInvoiceRow[]>();
 
   if (error) {
     console.log("[check-crypto-deposits] invoice query error", error.message);
@@ -65,17 +92,11 @@ async function handleCheckCryptoDeposits(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const results: {
-    invoiceId: string;
-    status: string;
-    relayStatus?: string;
-    accountId?: string | null;
-    error?: string;
-  }[] = [];
+  const results: CronResult[] = [];
 
   for (const invoice of invoices ?? []) {
     try {
-      const relayRequestId = String(invoice.relay_request_id || "");
+      const relayRequestId = invoice.relay_request_id?.trim();
 
       if (!relayRequestId) {
         results.push({
@@ -87,13 +108,11 @@ async function handleCheckCryptoDeposits(req: Request) {
       }
 
       const relayStatus = await getRelayIntentStatus(relayRequestId);
-
+      const inTxHashes = relayStatus.inTxHashes ?? [];
+      const outTxHashes = relayStatus.txHashes ?? [];
       const nextInvoiceStatus = mapRelayStatusToInvoiceStatus(
         relayStatus.status,
       );
-
-      const inTxHashes = relayStatus.inTxHashes ?? [];
-      const outTxHashes = relayStatus.txHashes ?? [];
 
       if (relayStatus.status === "success") {
         const { data: accountId, error: rpcError } = await supabaseAdmin.rpc(
@@ -127,21 +146,31 @@ async function handleCheckCryptoDeposits(req: Request) {
         continue;
       }
 
-      if (
-        new Date(invoice.expires_at) < now &&
-        relayStatus.status === "waiting"
-      ) {
-        await supabaseAdmin
+      if (isExpired(invoice.expires_at, now) && relayStatus.status === "waiting") {
+        const { error: updateError } = await supabaseAdmin
           .from("crypto_deposit_invoices")
           .update({
             status: "expired",
             relay_status: relayStatus.status,
             relay_in_tx_hashes: inTxHashes,
             relay_out_tx_hashes: outTxHashes,
+            tx_hash: inTxHashes[0] ?? outTxHashes[0] ?? null,
+            confirmations: 0,
             updated_at: new Date().toISOString(),
           })
           .eq("id", invoice.id)
           .in("status", ["pending", "processing"]);
+
+        if (updateError) {
+          results.push({
+            invoiceId: invoice.id,
+            status: "expire_update_failed",
+            relayStatus: relayStatus.status,
+            error: updateError.message,
+          });
+
+          continue;
+        }
 
         results.push({
           invoiceId: invoice.id,
@@ -156,7 +185,7 @@ async function handleCheckCryptoDeposits(req: Request) {
         relayStatus.status === "pending" ||
         relayStatus.status === "submitted";
 
-      await supabaseAdmin
+      const { error: updateError } = await supabaseAdmin
         .from("crypto_deposit_invoices")
         .update({
           status: nextInvoiceStatus,
@@ -169,6 +198,17 @@ async function handleCheckCryptoDeposits(req: Request) {
         })
         .eq("id", invoice.id)
         .in("status", ["pending", "processing"]);
+
+      if (updateError) {
+        results.push({
+          invoiceId: invoice.id,
+          status: "status_update_failed",
+          relayStatus: relayStatus.status,
+          error: updateError.message,
+        });
+
+        continue;
+      }
 
       results.push({
         invoiceId: invoice.id,
@@ -185,12 +225,14 @@ async function handleCheckCryptoDeposits(req: Request) {
   }
 
   console.log("[check-crypto-deposits] done", {
+    version: "relay-no-api-key-v1",
     checked: invoices?.length ?? 0,
     results,
   });
 
   return NextResponse.json({
     ok: true,
+    version: "relay-no-api-key-v1",
     checked: invoices?.length ?? 0,
     results,
   });

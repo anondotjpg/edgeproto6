@@ -50,18 +50,11 @@ export type RelayDepositQuote = {
 };
 
 const RELAY_API_BASE = process.env.RELAY_API_BASE ?? "https://api.relay.link";
-const RELAY_API_KEY = process.env.RELAY_API_KEY;
 
 function relayHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
+  return {
     "Content-Type": "application/json",
   };
-
-  if (RELAY_API_KEY) {
-    headers["x-api-key"] = RELAY_API_KEY;
-  }
-
-  return headers;
 }
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -383,13 +376,11 @@ export async function createRelayDepositQuote({
 
   if (!requestId) {
     console.log("[relay] missing requestId", { chain, quote });
-
     throw new Error("Relay quote did not return a requestId.");
   }
 
   if (!depositAddress) {
     console.log("[relay] missing depositAddress", { chain, quote });
-
     throw new Error("Relay quote did not return a deposit address.");
   }
 
