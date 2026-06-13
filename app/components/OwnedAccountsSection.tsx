@@ -40,7 +40,12 @@ const ACCOUNT_CARD_CLASS =
 const ACCOUNT_CARD_WIDTH_CLASS =
   "sm:w-[calc((100%_-_8px)_/_2)] xl:w-[calc((100%_-_16px)_/_3)]";
 
-type MiniGoalBarTone = "goal" | "failed" | "funded";
+type MiniGoalBarTone =
+  | "goal"
+  | "failed"
+  | "funded-gold"
+  | "funded-silver"
+  | "funded-green";
 
 function getAccountGoalProgress(account: ExistingAccount) {
   const status = account.status.toLowerCase();
@@ -69,9 +74,33 @@ function getMiniGoalBarTone(account: ExistingAccount): MiniGoalBarTone {
   const status = account.status.toLowerCase();
 
   if (status === "failed") return "failed";
-  if (status === "funded") return "funded";
+
+  if (status === "funded") {
+    if (account.plan_key === "10000") return "funded-gold";
+    if (account.plan_key === "5000") return "funded-silver";
+
+    return "funded-green";
+  }
 
   return "goal";
+}
+
+function mixHexColors(from: string, to: string, amount: number) {
+  const clampAmount = Math.min(Math.max(amount, 0), 1);
+
+  const fromRed = Number.parseInt(from.slice(1, 3), 16);
+  const fromGreen = Number.parseInt(from.slice(3, 5), 16);
+  const fromBlue = Number.parseInt(from.slice(5, 7), 16);
+
+  const toRed = Number.parseInt(to.slice(1, 3), 16);
+  const toGreen = Number.parseInt(to.slice(3, 5), 16);
+  const toBlue = Number.parseInt(to.slice(5, 7), 16);
+
+  const red = Math.round(fromRed + (toRed - fromRed) * clampAmount);
+  const green = Math.round(fromGreen + (toGreen - fromGreen) * clampAmount);
+  const blue = Math.round(fromBlue + (toBlue - fromBlue) * clampAmount);
+
+  return `rgb(${red}, ${green}, ${blue})`;
 }
 
 function MiniGoalProgressBar({
@@ -82,15 +111,14 @@ function MiniGoalProgressBar({
   tone: MiniGoalBarTone;
 }) {
   const barCount = 14;
-  const progress =
-    tone === "failed" || tone === "funded"
-      ? 100
-      : Math.min(Math.max(value, 0), 100);
+  const isCompleteTone = tone !== "goal";
+
+  const progress = isCompleteTone ? 100 : Math.min(Math.max(value, 0), 100);
 
   const step = 100 / barCount;
 
   const getBarFill = (index: number) => {
-    if (tone === "failed" || tone === "funded") return 1;
+    if (isCompleteTone) return 1;
 
     const barStart = index * step;
     const barEnd = barStart + step;
@@ -102,10 +130,28 @@ function MiniGoalProgressBar({
   };
 
   const getBarColor = (index: number) => {
-    if (tone === "failed") return "#ef4444";
-    if (tone === "funded") return "#22c55e";
-
     const ratio = barCount <= 1 ? 1 : index / (barCount - 1);
+
+    if (tone === "failed") return "#ef4444";
+
+    if (tone === "funded-gold") {
+      if (ratio < 0.5) {
+        return mixHexColors("#e0b84b", "#cfa13a", ratio / 0.5);
+      }
+
+      return mixHexColors("#cfa13a", "#b68b2d", (ratio - 0.5) / 0.5);
+    }
+
+    if (tone === "funded-silver") {
+      if (ratio < 0.5) {
+        return mixHexColors("#f4f4f5", "#d4d4d8", ratio / 0.5);
+      }
+
+      return mixHexColors("#d4d4d8", "#a1a1aa", (ratio - 0.5) / 0.5);
+    }
+
+    if (tone === "funded-green") return "#22c55e";
+
     const hue = 42 + ratio * 98;
 
     return `hsl(${hue} 82% 52%)`;
