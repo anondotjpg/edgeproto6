@@ -306,7 +306,7 @@ function CheckoutContent({
         </div>
       </div>
 
-      <div className="mt-5 min-h-[390px]">
+      <div className="mt-5 min-h-[350px]">
         <AnimatePresence mode="wait">
           {step === "method" ? (
             <motion.div
@@ -315,7 +315,7 @@ function CheckoutContent({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -18 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="flex min-h-[390px] flex-col"
+              className="flex min-h-[350px] flex-col"
             >
               <div>
                 <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
@@ -387,7 +387,7 @@ function CheckoutContent({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -18 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="flex min-h-[390px] flex-col"
+              className="flex min-h-[350px] flex-col"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -444,11 +444,6 @@ function CheckoutContent({
                       {copied === "deposit" ? "Copied" : "Copy"}
                     </button>
                   }
-                />
-
-                <InfoCard
-                  label="Arrives as"
-                  value={`${invoice.expected_destination_amount_display ?? "—"} USDC on Solana`}
                 />
 
                 <div className="grid grid-cols-2 gap-3">

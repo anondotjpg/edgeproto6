@@ -25,8 +25,19 @@ const DAILY_DRAWDOWN_PERCENT = 2;
 const TOTAL_DRAWDOWN_PERCENT = 5;
 const MAX_RISK_PER_TRADE_PERCENT = 5;
 
+const INVOICE_EXPIRY_MS = 10 * 60 * 1000;
+const RELAY_QUOTE_AMOUNT_MULTIPLIER = 0.01;
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+function getQuoteFeeAmount(feeAmount: number) {
+  const discountedAmount = Number(
+    (feeAmount * RELAY_QUOTE_AMOUNT_MULTIPLIER).toFixed(2),
+  );
+
+  return Math.max(0.01, discountedAmount);
+}
 
 export async function POST(req: Request) {
   try {
@@ -57,14 +68,16 @@ export async function POST(req: Request) {
 
     const selectedPlan = PLAN_CONFIG[planKey];
     const planSize = getPlanKeyValue(selectedPlan.planKey);
-    const feeAmount = Number(selectedPlan.feeAmount);
+    const actualFeeAmount = Number(selectedPlan.feeAmount);
 
-    if (!Number.isFinite(feeAmount) || feeAmount <= 0) {
+    if (!Number.isFinite(actualFeeAmount) || actualFeeAmount <= 0) {
       return NextResponse.json(
         { error: "Invalid plan fee amount." },
         { status: 400 },
       );
     }
+
+    const quoteFeeAmount = getQuoteFeeAmount(actualFeeAmount);
 
     const { data: existingUser, error: existingUserError } =
       await supabaseAdmin
@@ -110,7 +123,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const destinationAmountAtomic = makePlanUsdcAmountAtomic(feeAmount);
+    const destinationAmountAtomic = makePlanUsdcAmountAtomic(quoteFeeAmount);
     const destinationAmountDisplay = usdcAtomicToDisplay(
       destinationAmountAtomic,
     );
@@ -151,7 +164,7 @@ export async function POST(req: Request) {
         destination_address: DESTINATION_CONFIG.recipient,
 
         status: "pending",
-        expires_at: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + INVOICE_EXPIRY_MS).toISOString(),
 
         account_starting_balance: planSize,
         account_profit_target_percent: PROFIT_TARGET_PERCENT,
@@ -161,7 +174,7 @@ export async function POST(req: Request) {
           planSize * (DAILY_DRAWDOWN_PERCENT / 100),
         account_total_loss_limit_amount:
           planSize * (TOTAL_DRAWDOWN_PERCENT / 100),
-        one_time_fee: selectedPlan.feeAmount,
+        one_time_fee: quoteFeeAmount,
       })
       .select(
         `
@@ -194,6 +207,9 @@ export async function POST(req: Request) {
       planKey,
       chain,
       asset: invoice.asset,
+      actualFeeAmount,
+      quoteFeeAmount,
+      quoteMultiplier: RELAY_QUOTE_AMOUNT_MULTIPLIER,
       amount: invoice.expected_amount_display,
       depositAddress: invoice.deposit_address,
       relayRequestId: invoice.relay_request_id,
