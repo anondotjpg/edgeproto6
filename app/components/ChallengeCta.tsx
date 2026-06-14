@@ -511,7 +511,7 @@ function CheckoutContent({
                 </h3>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-zinc-800 bg-black/30 p-3">
+              <div className="mt-3 rounded-2xl border border-zinc-800 bg-black/30 p-3">
                 <div className="flex h-10 items-center gap-2">
                   <input
                     value={promoCode}
