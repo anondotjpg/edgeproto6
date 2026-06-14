@@ -289,6 +289,8 @@ function TeamRow({
   info?: TeamInfo;
   sportKey: string;
 }) {
+  const displayName = getTeamDisplayName(team, info);
+
   return (
     <div className="flex h-[46px] items-center gap-2 px-0 py-1 xl:gap-2.5 xl:px-2">
       {info?.logo ? (
@@ -301,19 +303,16 @@ function TeamRow({
         <div className={getLogoFallbackClassName(sportKey)} />
       )}
 
-      <div className="min-w-0">
-        <div className="truncate text-[14px] font-semibold leading-tight text-zinc-100 xl:text-[14px] xl:font-medium">
-          {info?.name || team}
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="truncate text-[15px] font-semibold leading-tight text-zinc-100 xl:text-[15px] xl:font-medium">
+          {displayName}
         </div>
 
-        <div
-          className={[
-            "mt-0.5 h-4 truncate text-[12px] leading-4 text-zinc-500 xl:text-[12px]",
-            info?.record ? "" : "invisible",
-          ].join(" ")}
-        >
-          {info?.record || "—"}
-        </div>
+        {info?.record ? (
+          <div className="shrink-0 text-[15px] font-medium leading-tight text-zinc-500 xl:text-[15px]">
+            {info.record}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -487,7 +486,7 @@ function GameCardHeader({ game, eventHref }: { game: Game; eventHref: string }) 
 
       <Link
         href={eventHref}
-        className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg bg-zinc-900 px-2.5 text-[12px] font-medium text-zinc-100 transition-colors hover:bg-zinc-800 xl:h-8 xl:gap-2 xl:rounded-xl xl:px-3 xl:text-[13px]"
+        className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[12px] font-medium text-zinc-100 transition-colors hover:text-zinc-300 xl:h-8 xl:gap-2 xl:rounded-xl xl:bg-zinc-900 xl:px-3 xl:text-[13px] xl:hover:bg-zinc-800 xl:hover:text-zinc-100"
       >
         <span>Game View</span>
         <FaChevronRight className="h-2 w-2 xl:h-2.5 xl:w-2.5" />
@@ -641,7 +640,8 @@ export default function GamesClient({
     });
   }, [league]);
 
-  const [selectedBet, setSelectedBet] = useState<BetSlipDataWithTeamAlias | null>(firstBet);
+  const [selectedBet, setSelectedBet] =
+    useState<BetSlipDataWithTeamAlias | null>(firstBet);
 
   const groupedGames = useMemo(() => {
     const groups: {
