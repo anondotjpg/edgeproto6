@@ -271,17 +271,17 @@ function SegmentedProgressBars({
       <style>{`
         @keyframes segmented-progress-fill {
           from {
-            opacity: 0.68;
+            transform: scaleX(0);
           }
           to {
-            opacity: var(--target-opacity);
+            transform: scaleX(var(--target-scale));
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .segmented-progress-overlay {
+          .segmented-progress-fill {
             animation: none !important;
-            opacity: var(--target-opacity) !important;
+            transform: scaleX(var(--target-scale)) !important;
           }
         }
       `}</style>
@@ -293,7 +293,6 @@ function SegmentedProgressBars({
         >
           {Array.from({ length: barCount }).map((_, index) => {
             const fill = getBarFill(index);
-            const targetOpacity = 0.68 * (1 - fill);
             const shouldAnimate = fill > 0;
 
             return (
@@ -301,27 +300,28 @@ function SegmentedProgressBars({
                 key={index}
                 className="relative min-w-0 overflow-hidden rounded-full bg-zinc-900"
               >
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={{ backgroundColor: getBarColor(index) }}
-                />
-
-                <div
-                  className="segmented-progress-overlay absolute inset-0 rounded-full bg-zinc-950"
-                  style={
-                    {
-                      "--target-opacity": targetOpacity.toString(),
-                      animation: shouldAnimate
-                        ? "segmented-progress-fill 340ms cubic-bezier(0.16, 1, 0.3, 1) forwards"
-                        : undefined,
-                      animationDelay: shouldAnimate
-                        ? getFillDelay(index)
-                        : undefined,
-                      opacity: shouldAnimate ? 0.68 : targetOpacity,
-                      willChange: shouldAnimate ? "opacity" : undefined,
-                    } as React.CSSProperties
-                  }
-                />
+                {fill > 0 ? (
+                  <div
+                    className="segmented-progress-fill absolute inset-y-0 left-0 h-full origin-left rounded-full"
+                    style={
+                      {
+                        "--target-scale": fill.toString(),
+                        width: "100%",
+                        backgroundColor: getBarColor(index),
+                        transform: shouldAnimate
+                          ? "scaleX(0)"
+                          : `scaleX(${fill})`,
+                        animation: shouldAnimate
+                          ? "segmented-progress-fill 340ms cubic-bezier(0.16, 1, 0.3, 1) forwards"
+                          : undefined,
+                        animationDelay: shouldAnimate
+                          ? getFillDelay(index)
+                          : undefined,
+                        willChange: shouldAnimate ? "transform" : undefined,
+                      } as React.CSSProperties
+                    }
+                  />
+                ) : null}
               </div>
             );
           })}

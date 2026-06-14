@@ -161,30 +161,30 @@ function MiniGoalProgressBar({
     <div className="mt-2 grid h-7 w-[clamp(138px,52%,172px)] grid-cols-[repeat(14,minmax(0,1fr))] gap-[3px]">
       {Array.from({ length: barCount }).map((_, index) => {
         const fill = getBarFill(index);
-        const overlayOpacity = 0.72 * (1 - fill);
 
         return (
           <div
             key={index}
             className="relative min-w-0 overflow-hidden rounded-full bg-zinc-900"
           >
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{ backgroundColor: getBarColor(index) }}
-            />
-
-            <div
-              data-tone={tone}
-              className="owned-mini-goal-cover absolute inset-0 rounded-full bg-zinc-950"
-              style={
-                {
-                  opacity: overlayOpacity,
-                  "--owned-mini-goal-cover-opacity": overlayOpacity,
-                  "--owned-mini-goal-delay":
-                    tone === "goal" ? `${Math.min(index * 17, 170)}ms` : "0ms",
-                } as React.CSSProperties
-              }
-            />
+            {fill > 0 ? (
+              <div
+                data-tone={tone}
+                className="owned-mini-goal-fill absolute inset-y-0 left-0 h-full origin-left rounded-full"
+                style={
+                  {
+                    width: "100%",
+                    backgroundColor: getBarColor(index),
+                    transform: `scaleX(${fill})`,
+                    "--owned-mini-goal-scale": fill,
+                    "--owned-mini-goal-delay":
+                      tone === "goal"
+                        ? `${Math.min(index * 17, 170)}ms`
+                        : "0ms",
+                  } as React.CSSProperties
+                }
+              />
+            ) : null}
           </div>
         );
       })}
@@ -428,10 +428,10 @@ export default function OwnedAccountsSection() {
 
         @keyframes ownedMiniGoalReplay {
           0% {
-            opacity: 0.72;
+            transform: scaleX(0);
           }
           100% {
-            opacity: var(--owned-mini-goal-cover-opacity);
+            transform: scaleX(var(--owned-mini-goal-scale));
           }
         }
 
@@ -440,7 +440,7 @@ export default function OwnedAccountsSection() {
         }
 
         @media (min-width: 640px) {
-          .group:hover .owned-mini-goal-cover[data-tone="goal"] {
+          .group:hover .owned-mini-goal-fill[data-tone="goal"] {
             animation: ownedMiniGoalReplay 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
             animation-delay: var(--owned-mini-goal-delay);
           }
@@ -451,8 +451,9 @@ export default function OwnedAccountsSection() {
             animation: none !important;
           }
 
-          .owned-mini-goal-cover {
+          .owned-mini-goal-fill {
             animation: none !important;
+            transform: scaleX(var(--owned-mini-goal-scale)) !important;
           }
         }
       `}</style>
