@@ -61,7 +61,7 @@ function getQuoteCents(finalCents: number) {
 }
 
 function centsToUsdcAtomic(cents: number) {
-  return BigInt(cents) * 10_000n;
+  return BigInt(cents) * BigInt(10000);
 }
 
 function asRecord(value: unknown) {
