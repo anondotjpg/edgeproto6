@@ -207,13 +207,13 @@ function StepDots({ step }: { step: DepositStep }) {
   const activeIndex = getStepIndex(step);
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-3">
       {[0, 1].map((index) => (
         <div
           key={index}
           className={[
-            "h-1.5 rounded-full transition-all",
-            index === activeIndex ? "w-5 bg-zinc-100" : "w-1.5 bg-zinc-700",
+            "h-3 rounded-full transition-all",
+            index === activeIndex ? "w-10 bg-zinc-100" : "w-3 bg-zinc-700",
           ].join(" ")}
         />
       ))}
@@ -247,6 +247,15 @@ function LoadingEllipsis() {
     >
       {ELLIPSIS_STEPS[index]}
     </span>
+  );
+}
+
+function ButtonSpinner() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-600 border-t-zinc-100"
+    />
   );
 }
 
@@ -482,13 +491,15 @@ function CheckoutContent({
                     type="button"
                     onClick={applyPromoCode}
                     disabled={isApplyingPromo || !cleanPromoCode}
-                    className="h-9 cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-[12px] font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="grid h-9 min-w-[74px] cursor-pointer place-items-center rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-[12px] font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {isApplyingPromo
-                      ? "..."
-                      : isPromoApplied
-                        ? "Applied"
-                        : "Apply"}
+                    {isApplyingPromo ? (
+                      <ButtonSpinner />
+                    ) : isPromoApplied ? (
+                      "Applied"
+                    ) : (
+                      "Apply"
+                    )}
                   </button>
                 </div>
 
