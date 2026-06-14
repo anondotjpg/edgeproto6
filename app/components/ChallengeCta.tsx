@@ -19,6 +19,16 @@ type ButtonStyle = "gold" | "silver" | "default";
 type DepositStep = "method" | "payment";
 type DepositChain = "solana" | "ethereum" | "bitcoin";
 
+type PromoPreview = {
+  valid: boolean;
+  code: string | null;
+  promoCodeId: string | null;
+  subtotalCents: number;
+  discountCents: number;
+  finalCents: number;
+  message: string | null;
+};
+
 type DepositInvoice = {
   id: string;
   provider: "relay";
@@ -45,6 +55,10 @@ type DepositInvoice = {
   credited_account_id?: string | null;
   relay_in_tx_hashes?: string[] | null;
   relay_out_tx_hashes?: string[] | null;
+  promo_code?: string | null;
+  subtotal_amount_cents?: number | null;
+  discount_amount_cents?: number | null;
+  final_amount_cents?: number | null;
 };
 
 type ChallengeCtaProps = {
@@ -149,6 +163,14 @@ function formatCountdown(ms: number) {
   }
 
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function formatCents(cents: number) {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function normalizePromoInput(value: string) {
+  return value.toUpperCase().replace(/\s+/g, "");
 }
 
 function shortenAddress(address: string) {
@@ -377,6 +399,12 @@ function CheckoutContent({
   createInvoice,
   copyText,
   openAccount,
+  promoCode,
+  promoMessage,
+  appliedPromo,
+  isApplyingPromo,
+  onPromoCodeChange,
+  applyPromoCode,
 }: {
   accountTitle: string;
   step: DepositStep;
@@ -389,7 +417,17 @@ function CheckoutContent({
   createInvoice: (chain: DepositChain) => void;
   copyText: (label: string, value: string) => void;
   openAccount: (accountId: string) => void;
+  promoCode: string;
+  promoMessage: string | null;
+  appliedPromo: PromoPreview | null;
+  isApplyingPromo: boolean;
+  onPromoCodeChange: (value: string) => void;
+  applyPromoCode: () => void;
 }) {
+  const cleanPromoCode = normalizePromoInput(promoCode);
+  const isPromoApplied =
+    Boolean(appliedPromo?.code) && appliedPromo?.code === cleanPromoCode;
+
   return (
     <>
       <div>
@@ -432,7 +470,59 @@ function CheckoutContent({
                 </p>
               </div>
 
-              <div className="mt-5 grid gap-2.5">
+              <div className="mt-5 rounded-2xl border border-zinc-800 bg-black/30 p-3">
+                <div className="flex h-10 items-center gap-2">
+                  <input
+                    value={promoCode}
+                    onChange={(event) =>
+                      onPromoCodeChange(event.target.value)
+                    }
+                    placeholder="Promo code"
+                    autoCapitalize="characters"
+                    className="min-w-0 flex-1 bg-transparent px-1 text-[14px] font-semibold uppercase tracking-[0.08em] text-zinc-100 outline-none placeholder:font-medium placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-600"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={applyPromoCode}
+                    disabled={isApplyingPromo || !cleanPromoCode}
+                    className="h-9 cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-[12px] font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {isApplyingPromo ? "..." : isPromoApplied ? "Applied" : "Apply"}
+                  </button>
+                </div>
+
+                {promoMessage ? (
+                  <p
+                    className={[
+                      "mt-2 text-[12px] leading-5",
+                      isPromoApplied ? "text-zinc-300" : "text-red-300",
+                    ].join(" ")}
+                  >
+                    {promoMessage}
+                  </p>
+                ) : null}
+
+                {isPromoApplied && appliedPromo ? (
+                  <div className="mt-3 border-t border-zinc-900 pt-3">
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-zinc-500">Discount</span>
+                      <span className="font-semibold text-zinc-100">
+                        -{formatCents(appliedPromo.discountCents)}
+                      </span>
+                    </div>
+
+                    <div className="mt-1 flex items-center justify-between text-[12px]">
+                      <span className="text-zinc-500">New total</span>
+                      <span className="font-semibold text-zinc-100">
+                        {formatCents(appliedPromo.finalCents)}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-3 grid gap-2.5">
                 {PAYMENT_METHODS.map((method) => {
                   const loading = creatingChain === method.chain;
                   const disabled = Boolean(creatingChain);
@@ -549,6 +639,21 @@ function CheckoutContent({
                   }
                 />
 
+                {invoice.discount_amount_cents &&
+                invoice.discount_amount_cents > 0 ? (
+                  <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-zinc-500">
+                        Promo {invoice.promo_code}
+                      </span>
+
+                      <span className="font-semibold text-zinc-100">
+                        -{formatCents(invoice.discount_amount_cents)}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
                     <p className="text-[12px] font-medium text-zinc-500">
@@ -634,6 +739,11 @@ export default function ChallengeCta({
   const [copied, setCopied] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
+  const [promoCode, setPromoCode] = useState("");
+  const [promoMessage, setPromoMessage] = useState<string | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<PromoPreview | null>(null);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+
   const accountTitle = getAccountTitle(planKey);
 
   const privyUserId = user?.id ?? null;
@@ -666,6 +776,10 @@ export default function ChallengeCta({
     setError(null);
     setCopied(null);
     setCreatingChain(null);
+    setPromoCode("");
+    setPromoMessage(null);
+    setAppliedPromo(null);
+    setIsApplyingPromo(false);
   }
 
   function openCheckout() {
@@ -697,12 +811,69 @@ export default function ChallengeCta({
     router.push(`/accounts/${accountId}`);
   }
 
+  function handlePromoCodeChange(value: string) {
+    const nextValue = normalizePromoInput(value);
+
+    setPromoCode(nextValue);
+    setAppliedPromo(null);
+    setPromoMessage(null);
+  }
+
+  async function applyPromoCode() {
+    if (!privyUserId || isApplyingPromo) return;
+
+    const cleanPromoCode = normalizePromoInput(promoCode);
+
+    if (!cleanPromoCode) {
+      setAppliedPromo(null);
+      setPromoMessage(null);
+      return;
+    }
+
+    try {
+      setIsApplyingPromo(true);
+      setError(null);
+      setPromoMessage(null);
+
+      const response = await fetch("/api/promo-codes/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          planKey,
+          promoCode: cleanPromoCode,
+          privyUserId,
+        }),
+      });
+
+      const data = (await readJsonResponse(response)) as PromoPreview;
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Invalid promo code.");
+      }
+
+      setAppliedPromo(data);
+      setPromoCode(data.code ?? cleanPromoCode);
+      setPromoMessage(data.message ?? "Promo code applied.");
+    } catch (error) {
+      setAppliedPromo(null);
+      setPromoMessage(
+        error instanceof Error ? error.message : "Invalid promo code.",
+      );
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  }
+
   async function createInvoice(chain: DepositChain) {
     if (!privyUserId || creatingChain) return;
 
     try {
       setCreatingChain(chain);
       setError(null);
+
+      const cleanPromoCode = appliedPromo?.code ?? normalizePromoInput(promoCode);
 
       const response = await fetch("/api/crypto-deposits/create", {
         method: "POST",
@@ -712,6 +883,7 @@ export default function ChallengeCta({
         body: JSON.stringify({
           planKey,
           chain,
+          promoCode: cleanPromoCode || null,
           privyUserId,
           email,
           walletAddress,
@@ -834,6 +1006,12 @@ export default function ChallengeCta({
       createInvoice={createInvoice}
       copyText={copyText}
       openAccount={openAccount}
+      promoCode={promoCode}
+      promoMessage={promoMessage}
+      appliedPromo={appliedPromo}
+      isApplyingPromo={isApplyingPromo}
+      onPromoCodeChange={handlePromoCodeChange}
+      applyPromoCode={applyPromoCode}
     />
   );
 
