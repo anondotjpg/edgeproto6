@@ -85,7 +85,7 @@ export default function TopRightAuth() {
         <button
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
-          className="relative flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-zinc-800 bg-zinc-950 md:border-zinc-700"
+          className="relative flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-full"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           aria-label="Open account menu"
