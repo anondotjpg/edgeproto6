@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { FaChevronRight, FaLock } from "react-icons/fa";
@@ -45,11 +45,13 @@ type TeamInfo = {
   alias?: string;
   record?: string;
   logo?: string;
+  color?: string;
 };
 
 type BetSlipDataWithTeamAlias = BetSlipData & {
   teamAlias?: string | null;
   isLive?: boolean;
+  teamColor?: string | null;
 };
 
 type GameWithLiveStatus = Game & {
@@ -63,7 +65,7 @@ function getMarket(bookmaker: Bookmaker | undefined, marketKey: string) {
 
 function getOutcomeByName(
   outcomes: OddsOutcome[] | undefined,
-  teamName: string
+  teamName: string,
 ) {
   return outcomes?.find((outcome) => outcome.name === teamName);
 }
@@ -87,6 +89,77 @@ function formatImpliedPercent(price?: number) {
   if (probability === null) return "—";
 
   return `${Math.round(probability * 100)}%`;
+}
+
+function isValidHexColor(value: string | null | undefined) {
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(value ?? ""));
+}
+
+function hexToRgb(value: string) {
+  const hex = value.replace("#", "");
+
+  if (hex.length === 3) {
+    return {
+      r: Number.parseInt(hex[0] + hex[0], 16),
+      g: Number.parseInt(hex[1] + hex[1], 16),
+      b: Number.parseInt(hex[2] + hex[2], 16),
+    };
+  }
+
+  return {
+    r: Number.parseInt(hex.slice(0, 2), 16),
+    g: Number.parseInt(hex.slice(2, 4), 16),
+    b: Number.parseInt(hex.slice(4, 6), 16),
+  };
+}
+
+function rgbToHex({ r, g, b }: { r: number; g: number; b: number }) {
+  return `#${[r, g, b]
+    .map((value) =>
+      Math.min(Math.max(Math.round(value), 0), 255)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+function shadeHexColor(value: string, amount: number) {
+  const rgb = hexToRgb(value);
+  const target = amount >= 0 ? 255 : 0;
+  const mix = Math.abs(amount);
+
+  return rgbToHex({
+    r: rgb.r + (target - rgb.r) * mix,
+    g: rgb.g + (target - rgb.g) * mix,
+    b: rgb.b + (target - rgb.b) * mix,
+  });
+}
+
+function getTeamColorStyles({
+  color,
+  selected,
+  isLive,
+}: {
+  color?: string | null;
+  selected?: boolean;
+  isLive?: boolean;
+}): {
+  shellStyle?: CSSProperties;
+  faceStyle?: CSSProperties;
+} {
+  if (isLive || !isValidHexColor(color)) return {};
+
+  const safeColor = color!;
+
+  return {
+    shellStyle: {
+      backgroundColor: shadeHexColor(safeColor, selected ? -0.34 : -0.52),
+    },
+    faceStyle: {
+      backgroundColor: safeColor,
+      boxShadow: `inset 0 1px 0 ${shadeHexColor(safeColor, 0.16)}`,
+    },
+  };
 }
 
 function getTeamTicker(team: string, info?: TeamInfo) {
@@ -121,7 +194,7 @@ function getTeamDisplayName(team: string, info?: TeamInfo) {
 function getMatchupDisplayName(game: Game) {
   return `${getTeamDisplayName(
     game.away_team,
-    game.away_team_info
+    game.away_team_info,
   )} vs. ${getTeamDisplayName(game.home_team, game.home_team_info)}`;
 }
 
@@ -277,6 +350,7 @@ function buildBetData({
     teamAlias: info?.alias ?? null,
     teamLogo: info?.logo ?? null,
     teamLogoAlt: info?.name ?? team,
+    teamColor: info?.color ?? null,
   };
 }
 
@@ -304,7 +378,7 @@ function TeamRow({
       )}
 
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <div className="truncate text-[15px] font-semibold leading-tight text-zinc-100 xl:text-[15px] xl:font-medium">
+        <div className="truncate text-[15px] font-semibold leading-tight text-zinc-100 xl:text-[15px]">
           {displayName}
         </div>
 
@@ -321,31 +395,41 @@ function TeamRow({
 function MoneylineFace({
   selected,
   isLive,
+  teamColor,
   children,
 }: {
   selected: boolean;
   isLive?: boolean;
+  teamColor?: string | null;
   children: ReactNode;
 }) {
+  const { shellStyle, faceStyle } = getTeamColorStyles({
+    color: teamColor,
+    selected,
+    isLive,
+  });
+
   return (
     <div
       className={[
         "rounded-xl",
-        isLive ? "bg-zinc-900" : selected ? "bg-zinc-600" : "bg-zinc-800",
+        isLive ? "bg-zinc-700" : selected ? "bg-zinc-600" : "bg-zinc-800",
       ].join(" ")}
       style={{
         paddingBottom: "2px",
+        ...shellStyle,
       }}
     >
       <div
         className={[
-          "flex h-[42px] w-full translate-y-[-2px] items-center justify-center overflow-hidden rounded-xl border px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
+          "flex h-[42px] w-full translate-y-[-2px] items-center justify-center overflow-hidden rounded-xl px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
           isLive
-            ? "border-zinc-800 bg-zinc-950/80"
+            ? "bg-zinc-800"
             : selected
-              ? "border-zinc-600 bg-zinc-700"
-              : "border-zinc-800 bg-zinc-900",
+              ? "bg-zinc-700"
+              : "bg-zinc-900",
         ].join(" ")}
+        style={faceStyle}
       >
         {children}
       </div>
@@ -360,33 +444,61 @@ function MobileMoneylineModalButton({
   betData: BetSlipDataWithTeamAlias;
   ticker: string;
 }) {
+  const { shellStyle, faceStyle } = getTeamColorStyles({
+    color: betData.teamColor,
+    selected: false,
+    isLive: betData.isLive,
+  });
+
   return (
     <div
       className={[
         "group relative rounded-xl",
-        betData.isLive ? "bg-zinc-900" : "bg-zinc-800",
+        betData.isLive ? "bg-zinc-700" : "bg-zinc-800",
       ].join(" ")}
       style={{
         paddingBottom: "2px",
+        ...shellStyle,
       }}
     >
       <BetSlipModal
-        {...betData}
+        team={betData.team}
+        teamAlias={betData.teamAlias}
+        gameId={betData.gameId}
+        league={betData.league}
+        market={betData.market}
+        odds={betData.odds}
+        impliedPercent={betData.impliedPercent}
+        matchup={betData.matchup}
+        matchupAlias={betData.matchupAlias}
+        isLive={betData.isLive}
+        polymarketEventId={betData.polymarketEventId}
+        polymarketEventSlug={betData.polymarketEventSlug}
+        polymarketMarketId={betData.polymarketMarketId}
+        polymarketConditionId={betData.polymarketConditionId}
+        polymarketMarketSlug={betData.polymarketMarketSlug}
+        polymarketOutcome={betData.polymarketOutcome}
+        polymarketOutcomeIndex={betData.polymarketOutcomeIndex}
+        polymarketTokenId={betData.polymarketTokenId}
+        teamLogo={betData.teamLogo}
+        teamLogoAlt={betData.teamLogoAlt}
+        teamColor={betData.teamColor}
         triggerClassName={[
-          "peer flex h-[42px] w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
-          betData.isLive
-            ? "border-zinc-800 bg-zinc-950/80"
-            : "border-zinc-800 bg-zinc-900",
+          "peer flex h-[42px] w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
+          betData.isLive ? "bg-zinc-800" : "bg-zinc-900",
         ].join(" ")}
         triggerContentClassName="sr-only"
       />
 
-      <div className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center gap-1.5 transition-transform duration-100 will-change-transform peer-hover:translate-y-[-1px] peer-active:translate-y-0 group-hover:translate-y-[-1px] group-active:translate-y-0">
+      <div
+        className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center gap-1.5 rounded-xl transition-transform duration-100 will-change-transform peer-hover:translate-y-[-1px] peer-active:translate-y-0 group-hover:translate-y-[-1px] group-active:translate-y-0"
+        style={faceStyle}
+      >
         {betData.isLive ? (
-          <FaLock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+          <FaLock className="h-3.5 w-3.5 shrink-0 text-zinc-300" />
         ) : (
           <>
-            <span className="text-[10px] font-bold leading-none tracking-[0.12em] text-zinc-500">
+            <span className="text-[10px] font-bold leading-none tracking-[0.12em] text-zinc-200">
               {ticker}
             </span>
 
@@ -425,9 +537,13 @@ function MoneylineCell({
       onClick={() => onSelect(betData)}
       className="block w-full cursor-pointer"
     >
-      <MoneylineFace selected={selected} isLive={isLive}>
+      <MoneylineFace
+        selected={selected}
+        isLive={isLive}
+        teamColor={betData.teamColor}
+      >
         {isLive ? (
-          <FaLock className="h-3.5 w-3.5 text-zinc-500" />
+          <FaLock className="h-3.5 w-3.5 text-zinc-300" />
         ) : (
           <span className="text-[13px] font-semibold leading-none tracking-tight text-zinc-100">
             {betData.odds}
@@ -741,7 +857,31 @@ export default function GamesClient({
               ].join(" ")}
             >
               {selectedBet ? (
-                <BetSlipPanel {...selectedBet} enabled panelMode="sidebar" />
+                <BetSlipPanel
+                  team={selectedBet.team}
+                  teamAlias={selectedBet.teamAlias}
+                  gameId={selectedBet.gameId}
+                  league={selectedBet.league}
+                  market={selectedBet.market}
+                  odds={selectedBet.odds}
+                  impliedPercent={selectedBet.impliedPercent}
+                  matchup={selectedBet.matchup}
+                  matchupAlias={selectedBet.matchupAlias}
+                  isLive={selectedBet.isLive}
+                  polymarketEventId={selectedBet.polymarketEventId}
+                  polymarketEventSlug={selectedBet.polymarketEventSlug}
+                  polymarketMarketId={selectedBet.polymarketMarketId}
+                  polymarketConditionId={selectedBet.polymarketConditionId}
+                  polymarketMarketSlug={selectedBet.polymarketMarketSlug}
+                  polymarketOutcome={selectedBet.polymarketOutcome}
+                  polymarketOutcomeIndex={selectedBet.polymarketOutcomeIndex}
+                  polymarketTokenId={selectedBet.polymarketTokenId}
+                  teamLogo={selectedBet.teamLogo}
+                  teamLogoAlt={selectedBet.teamLogoAlt}
+                  teamColor={selectedBet.teamColor}
+                  enabled
+                  panelMode="sidebar"
+                />
               ) : (
                 <div className="invisible p-5 text-sm text-zinc-500">
                   Select a moneyline to place a bet.

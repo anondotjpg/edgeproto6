@@ -38,7 +38,7 @@ type PolymarketTeam = {
   logo?: string | null;
   abbreviation?: string | null;
   alias?: string | null;
-  colorPrimary?: string | null;
+  color?: string | null;
   displayAbbreviation?: string | null;
   safeName?: string | null;
 };
@@ -49,7 +49,7 @@ type TeamInfo = {
   alias?: string;
   record?: string;
   logo?: string;
-  colorPrimary?: string;
+  color?: string;
 };
 
 let cachedTeamsByKey: Map<string, PolymarketTeam> | null = null;
@@ -105,7 +105,7 @@ function normalizeTeamInfo(value: unknown): TeamInfo | undefined {
     alias: getString(value.alias),
     record: getString(value.record),
     logo: getString(value.logo),
-    colorPrimary: getString(value.colorPrimary),
+    color: getString(value.color),
   };
 
   return teamInfo;
@@ -233,11 +233,11 @@ function mergeTeamInfo({
     teamInfo: existingTeamInfo,
   });
 
-  const colorPrimary =
-    existingTeamInfo?.colorPrimary && isValidHexColor(existingTeamInfo.colorPrimary)
-      ? existingTeamInfo.colorPrimary
-      : isValidHexColor(polymarketTeam?.colorPrimary)
-        ? polymarketTeam?.colorPrimary ?? undefined
+  const color =
+    existingTeamInfo?.color && isValidHexColor(existingTeamInfo.color)
+      ? existingTeamInfo.color
+      : isValidHexColor(polymarketTeam?.color)
+        ? polymarketTeam?.color ?? undefined
         : undefined;
 
   return {
@@ -250,7 +250,7 @@ function mergeTeamInfo({
     alias: existingTeamInfo?.alias ?? polymarketTeam?.alias ?? undefined,
     record: existingTeamInfo?.record,
     logo: existingTeamInfo?.logo ?? polymarketTeam?.logo ?? undefined,
-    colorPrimary,
+    color,
   };
 }
 

@@ -1,3 +1,4 @@
+// BetSlipModal.tsx
 "use client";
 
 import {
@@ -85,6 +86,7 @@ export type BetSlipData = {
   polymarketTokenId?: string | null;
   teamLogo?: string | null;
   teamLogoAlt?: string | null;
+  teamColor?: string | null;
 };
 
 type BetSlipModalProps = BetSlipData & {
@@ -274,6 +276,75 @@ function PercentFlow({
 
 function parseImpliedPercent(value: string) {
   return Number(value.replace("%", ""));
+}
+
+function isValidHexColor(value: string | null | undefined) {
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(value ?? ""));
+}
+
+function hexToRgb(value: string) {
+  const hex = value.replace("#", "");
+
+  if (hex.length === 3) {
+    return {
+      r: Number.parseInt(hex[0] + hex[0], 16),
+      g: Number.parseInt(hex[1] + hex[1], 16),
+      b: Number.parseInt(hex[2] + hex[2], 16),
+    };
+  }
+
+  return {
+    r: Number.parseInt(hex.slice(0, 2), 16),
+    g: Number.parseInt(hex.slice(2, 4), 16),
+    b: Number.parseInt(hex.slice(4, 6), 16),
+  };
+}
+
+function rgbToHex({ r, g, b }: { r: number; g: number; b: number }) {
+  return `#${[r, g, b]
+    .map((value) =>
+      Math.min(Math.max(Math.round(value), 0), 255)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+function shadeHexColor(value: string, amount: number) {
+  const rgb = hexToRgb(value);
+  const target = amount >= 0 ? 255 : 0;
+  const mix = Math.abs(amount);
+
+  return rgbToHex({
+    r: rgb.r + (target - rgb.r) * mix,
+    g: rgb.g + (target - rgb.g) * mix,
+    b: rgb.b + (target - rgb.b) * mix,
+  });
+}
+
+function getTeamActionButtonStyles(color?: string | null) {
+  if (!isValidHexColor(color)) {
+    return {
+      shellStyle: undefined,
+      faceStyle: undefined,
+      progressStyle: undefined,
+    };
+  }
+
+  const safeColor = color!;
+
+  return {
+    shellStyle: {
+      backgroundColor: shadeHexColor(safeColor, -0.52),
+    } as CSSProperties,
+    faceStyle: {
+      backgroundColor: safeColor,
+      boxShadow: `inset 0 1px 0 ${shadeHexColor(safeColor, 0.16)}`,
+    } as CSSProperties,
+    progressStyle: {
+      backgroundColor: shadeHexColor(safeColor, -0.18),
+    } as CSSProperties,
+  };
 }
 
 function formatCompactMoney(value: number | null | undefined) {
@@ -529,6 +600,7 @@ function OffsetPlaceBetButton({
   mobileLayout,
   holdProgress,
   panelMode,
+  teamColor,
   onPlaceBet,
   onPointerDown,
   onPointerUp,
@@ -541,6 +613,7 @@ function OffsetPlaceBetButton({
   mobileLayout: boolean;
   holdProgress: number;
   panelMode: "modal" | "sidebar";
+  teamColor?: string | null;
   onPlaceBet: () => void;
   onPointerDown: (event: PointerEvent<HTMLButtonElement>) => void;
   onPointerUp: () => void;
@@ -556,39 +629,51 @@ function OffsetPlaceBetButton({
         : "Place Bet";
 
   const buttonContent = buttonText;
+  const { shellStyle, faceStyle, progressStyle } =
+    getTeamActionButtonStyles(teamColor);
 
   if (mobileLayout) {
     return (
-      <motion.button
-        type="button"
-        animate={{
-          scale: holdProgress > 0 ? 0.975 : 1,
+      <div
+        className="mt-3 mb-4 rounded-2xl bg-zinc-800"
+        style={{
+          paddingBottom: "2px",
+          ...shellStyle,
         }}
-        transition={{
-          duration: 0.18,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-        onClick={(event) => {
-          event.preventDefault();
-        }}
-        onPointerDown={onPointerDown}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerLeave}
-        onPointerCancel={onPointerCancel}
-        disabled={disabled}
-        className="relative mt-3 mb-4 h-16 w-full cursor-pointer select-none overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 text-[16px] font-semibold text-zinc-100 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
       >
-        <span
-          className="pointer-events-none absolute inset-y-0 left-0 bg-zinc-800"
-          style={{
-            width: `${holdProgress * 100}%`,
+        <motion.button
+          type="button"
+          animate={{
+            scale: holdProgress > 0 ? 0.975 : 1,
           }}
-        />
+          transition={{
+            duration: 0.18,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          onClick={(event) => {
+            event.preventDefault();
+          }}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          onPointerLeave={onPointerLeave}
+          onPointerCancel={onPointerCancel}
+          disabled={disabled}
+          className="relative h-16 w-full translate-y-[-2px] cursor-pointer select-none overflow-hidden rounded-2xl bg-zinc-900 text-[16px] font-semibold text-zinc-100 transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0 disabled:cursor-not-allowed"
+          style={faceStyle}
+        >
+          <span
+            className="pointer-events-none absolute inset-y-0 left-0 bg-zinc-800"
+            style={{
+              width: `${holdProgress * 100}%`,
+              ...progressStyle,
+            }}
+          />
 
-        <span className="pointer-events-none relative z-10 select-none">
-          {buttonContent}
-        </span>
-      </motion.button>
+          <span className="pointer-events-none relative z-10 select-none">
+            {buttonContent}
+          </span>
+        </motion.button>
+      </div>
     );
   }
 
@@ -600,6 +685,7 @@ function OffsetPlaceBetButton({
       ].join(" ")}
       style={{
         paddingBottom: "2px",
+        ...shellStyle,
       }}
     >
       <motion.button
@@ -618,9 +704,10 @@ function OffsetPlaceBetButton({
         onPointerCancel={onPointerCancel}
         disabled={disabled}
         className={[
-          "relative w-full translate-y-[-2px] cursor-pointer select-none overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 font-semibold text-zinc-100 transition-[transform,opacity] duration-100 hover:translate-y-[-1px] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40",
+          "relative w-full translate-y-[-2px] cursor-pointer select-none overflow-hidden rounded-2xl bg-zinc-900 font-semibold text-zinc-100 transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0 disabled:cursor-not-allowed",
           panelMode === "sidebar" ? "h-12 text-[15px]" : "h-12 text-[15px]",
         ].join(" ")}
+        style={faceStyle}
       >
         <span className="pointer-events-none relative z-10 select-none">
           {buttonContent}
@@ -845,9 +932,8 @@ const AccountSelectSection = memo(function AccountSelectSection({
             href="/accounts"
             className="flex h-[84px] w-full cursor-pointer items-start rounded-2xl border border-zinc-800 bg-black/30 p-3.5 text-left text-base text-zinc-300"
           >
-            No accounts. 
-            <span className="inline underline">Start a challenge</span>
-             first.
+            No accounts. <span className="inline underline">Start a challenge</span>{" "}
+            first.
           </Link>
         )}
       </div>
@@ -873,6 +959,7 @@ function BetSlipControls({
   ruleWarning,
   mobileLayout,
   panelMode,
+  teamColor,
   onToggleAccount,
   onAmountChange,
   onQuickAmount,
@@ -895,6 +982,7 @@ function BetSlipControls({
   ruleWarning: string | null;
   mobileLayout: boolean;
   panelMode: "modal" | "sidebar";
+  teamColor?: string | null;
   onToggleAccount: (accountId: string) => void;
   onAmountChange: (value: number | readonly number[]) => void;
   onQuickAmount: (percent: number) => void;
@@ -1197,6 +1285,7 @@ function BetSlipControls({
         mobileLayout={mobileLayout}
         holdProgress={holdProgress}
         panelMode={panelMode}
+        teamColor={teamColor}
         onPlaceBet={onPlaceBet}
         onPointerDown={beginHoldToPlace}
         onPointerUp={cancelHoldToPlace}
@@ -1226,6 +1315,7 @@ const MemoBetSlipControls = memo(BetSlipControls, (prev, next) => {
     prev.ruleWarning === next.ruleWarning &&
     prev.mobileLayout === next.mobileLayout &&
     prev.panelMode === next.panelMode &&
+    prev.teamColor === next.teamColor &&
     prev.onToggleAccount === next.onToggleAccount &&
     prev.onAmountChange === next.onAmountChange &&
     prev.onQuickAmount === next.onQuickAmount &&
@@ -1259,6 +1349,7 @@ function BetSlipContent({
   ruleWarning,
   mobileLayout,
   panelMode,
+  teamColor,
   onToggleAccount,
   onAmountChange,
   onQuickAmount,
@@ -1290,6 +1381,7 @@ function BetSlipContent({
   ruleWarning: string | null;
   mobileLayout: boolean;
   panelMode: "modal" | "sidebar";
+  teamColor?: string | null;
   onToggleAccount: (accountId: string) => void;
   onAmountChange: (value: number | readonly number[]) => void;
   onQuickAmount: (percent: number) => void;
@@ -1329,6 +1421,7 @@ function BetSlipContent({
         ruleWarning={ruleWarning}
         mobileLayout={mobileLayout}
         panelMode={panelMode}
+        teamColor={teamColor}
         onToggleAccount={onToggleAccount}
         onAmountChange={onAmountChange}
         onQuickAmount={onQuickAmount}
@@ -1714,6 +1807,7 @@ export function BetSlipPanel({
       ruleWarning={ruleWarning}
       mobileLayout={isMobile}
       panelMode={panelMode}
+      teamColor={bet.teamColor}
       onToggleAccount={toggleAccount}
       onAmountChange={handleSliderAmountChange}
       onQuickAmount={handleQuickAmount}

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { FiArrowUpRight } from "react-icons/fi";
@@ -14,6 +14,7 @@ import type { Game, OddsOutcome, TeamInfo } from "./page";
 type BetSlipDataWithTeamAlias = BetSlipData & {
   teamAlias?: string | null;
   isLive?: boolean;
+  teamColor?: string | null;
 };
 
 type GameWithLiveStatus = Game & {
@@ -53,6 +54,77 @@ function formatImpliedPercent(price?: number) {
   if (probability === null) return "—";
 
   return `${Math.round(probability * 100)}%`;
+}
+
+function isValidHexColor(value: string | null | undefined) {
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(value ?? ""));
+}
+
+function hexToRgb(value: string) {
+  const hex = value.replace("#", "");
+
+  if (hex.length === 3) {
+    return {
+      r: Number.parseInt(hex[0] + hex[0], 16),
+      g: Number.parseInt(hex[1] + hex[1], 16),
+      b: Number.parseInt(hex[2] + hex[2], 16),
+    };
+  }
+
+  return {
+    r: Number.parseInt(hex.slice(0, 2), 16),
+    g: Number.parseInt(hex.slice(2, 4), 16),
+    b: Number.parseInt(hex.slice(4, 6), 16),
+  };
+}
+
+function rgbToHex({ r, g, b }: { r: number; g: number; b: number }) {
+  return `#${[r, g, b]
+    .map((value) =>
+      Math.min(Math.max(Math.round(value), 0), 255)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+function shadeHexColor(value: string, amount: number) {
+  const rgb = hexToRgb(value);
+  const target = amount >= 0 ? 255 : 0;
+  const mix = Math.abs(amount);
+
+  return rgbToHex({
+    r: rgb.r + (target - rgb.r) * mix,
+    g: rgb.g + (target - rgb.g) * mix,
+    b: rgb.b + (target - rgb.b) * mix,
+  });
+}
+
+function getTeamColorStyles({
+  color,
+  selected,
+  isLive,
+}: {
+  color?: string | null;
+  selected?: boolean;
+  isLive?: boolean;
+}): {
+  shellStyle?: CSSProperties;
+  faceStyle?: CSSProperties;
+} {
+  if (isLive || !isValidHexColor(color)) return {};
+
+  const safeColor = color!;
+
+  return {
+    shellStyle: {
+      backgroundColor: shadeHexColor(safeColor, selected ? -0.34 : -0.52),
+    },
+    faceStyle: {
+      backgroundColor: safeColor,
+      boxShadow: `inset 0 1px 0 ${shadeHexColor(safeColor, 0.16)}`,
+    },
+  };
 }
 
 function getPolymarketHref(game: Game) {
@@ -189,6 +261,7 @@ function buildBetData({
     polymarketTokenId: polymarketTokenId ?? null,
     teamLogo: info?.logo ?? null,
     teamLogoAlt: info?.name ?? team,
+    teamColor: info?.color ?? null,
   };
 }
 
@@ -266,33 +339,42 @@ function MobileMoneylineModalButton({
   betData: BetSlipDataWithTeamAlias;
   ticker: string;
 }) {
+  const { shellStyle, faceStyle } = getTeamColorStyles({
+    color: betData.teamColor,
+    selected: false,
+    isLive: betData.isLive,
+  });
+
   return (
     <div
       className={[
         "group relative rounded-xl",
-        betData.isLive ? "bg-zinc-900" : "bg-zinc-800",
+        betData.isLive ? "bg-zinc-700" : "bg-zinc-800",
       ].join(" ")}
       style={{
         paddingBottom: "2px",
+        ...shellStyle,
       }}
     >
       <BetSlipModal
         {...betData}
+        teamColor={betData.teamColor}
         triggerClassName={[
-          "peer flex h-10 w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
-          betData.isLive
-            ? "border-zinc-800 bg-zinc-950/80"
-            : "border-zinc-800 bg-zinc-900",
+          "peer flex h-10 w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
+          betData.isLive ? "bg-zinc-800" : "bg-zinc-900",
         ].join(" ")}
         triggerContentClassName="sr-only"
       />
 
-      <div className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center gap-1.5 transition-transform duration-100 will-change-transform peer-hover:translate-y-[-1px] peer-active:translate-y-0 group-hover:translate-y-[-1px] group-active:translate-y-0">
+      <div
+        className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center gap-1.5 rounded-xl transition-transform duration-100 will-change-transform peer-hover:translate-y-[-1px] peer-active:translate-y-0 group-hover:translate-y-[-1px] group-active:translate-y-0"
+        style={faceStyle}
+      >
         {betData.isLive ? (
-          <FaLock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+          <FaLock className="h-3.5 w-3.5 shrink-0 text-zinc-300" />
         ) : (
           <>
-            <span className="text-[10px] font-bold leading-none tracking-[0.12em] text-zinc-500">
+            <span className="text-[10px] font-bold leading-none tracking-[0.12em] text-zinc-200">
               {ticker}
             </span>
 
@@ -362,6 +444,11 @@ function DesktopTeamPanel({
   onSelect: () => void;
 }) {
   const isLive = Boolean(betData.isLive);
+  const { shellStyle, faceStyle } = getTeamColorStyles({
+    color: betData.teamColor,
+    selected,
+    isLive,
+  });
 
   return (
     <div
@@ -412,36 +499,39 @@ function DesktopTeamPanel({
             className={[
               "relative rounded-xl",
               isLive
-                ? "bg-zinc-900"
+                ? "bg-zinc-700"
                 : selected
                   ? "bg-zinc-800 xl:bg-zinc-600"
                   : "bg-zinc-800",
             ].join(" ")}
             style={{
               paddingBottom: "2px",
+              ...shellStyle,
             }}
           >
             <div className="xl:hidden">
               <BetSlipModal
                 {...betData}
+                teamColor={betData.teamColor}
                 triggerClassName={[
-                  "flex h-[42px] min-w-[84px] translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
-                  isLive
-                    ? "border-zinc-800 bg-zinc-950/80"
-                    : "border-zinc-800 bg-zinc-900",
+                  "peer flex h-[42px] min-w-[84px] translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
+                  isLive ? "bg-zinc-800" : "bg-zinc-900",
                 ].join(" ")}
-                triggerContentClassName={
-                  isLive
-                    ? "sr-only"
-                    : "text-[13px] font-semibold leading-none tracking-tight text-zinc-100"
-                }
+                triggerContentClassName="sr-only"
               />
 
-              {isLive ? (
-                <div className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center">
-                  <FaLock className="h-3.5 w-3.5 text-zinc-500" />
-                </div>
-              ) : null}
+              <div
+                className="pointer-events-none absolute inset-0 flex translate-y-[-2px] items-center justify-center rounded-xl"
+                style={faceStyle}
+              >
+                {isLive ? (
+                  <FaLock className="h-3.5 w-3.5 text-zinc-300" />
+                ) : (
+                  <span className="text-[13px] font-semibold leading-none tracking-tight text-zinc-100">
+                    {betData.odds}
+                  </span>
+                )}
+              </div>
             </div>
 
             <button
@@ -449,16 +539,17 @@ function DesktopTeamPanel({
               onClick={onSelect}
               disabled={isLive}
               className={[
-                "hidden h-[42px] min-w-[84px] translate-y-[-2px] items-center justify-center overflow-hidden rounded-xl border px-2.5 text-center transition-transform duration-100 xl:flex",
+                "hidden h-[42px] min-w-[84px] translate-y-[-2px] items-center justify-center overflow-hidden rounded-xl px-2.5 text-center transition-transform duration-100 xl:flex",
                 isLive
-                  ? "cursor-not-allowed border-zinc-800 bg-zinc-950/80"
+                  ? "cursor-not-allowed bg-zinc-800"
                   : selected
-                    ? "cursor-pointer border-zinc-600 bg-zinc-700 hover:translate-y-[-1px] active:translate-y-0"
-                    : "cursor-pointer border-zinc-800 bg-zinc-900 hover:translate-y-[-1px] active:translate-y-0",
+                    ? "cursor-pointer bg-zinc-700 hover:translate-y-[-1px] active:translate-y-0"
+                    : "cursor-pointer bg-zinc-900 hover:translate-y-[-1px] active:translate-y-0",
               ].join(" ")}
+              style={faceStyle}
             >
               {isLive ? (
-                <FaLock className="h-3.5 w-3.5 text-zinc-500" />
+                <FaLock className="h-3.5 w-3.5 text-zinc-300" />
               ) : (
                 <span className="text-[13px] font-semibold leading-none tracking-tight text-zinc-100">
                   {betData.odds}
@@ -548,7 +639,9 @@ export default function EventBettingClient({
             />
           </div>
 
-          {children ? <div className="-mt-1 md:mt-0 md:pt-2">{children}</div> : null}
+          {children ? (
+            <div className="-mt-1 md:mt-0 md:pt-2">{children}</div>
+          ) : null}
         </section>
       </main>
 
@@ -562,7 +655,12 @@ export default function EventBettingClient({
           ].join(" ")}
         >
           {selectedBet ? (
-            <BetSlipPanel {...selectedBet} enabled panelMode="sidebar" />
+            <BetSlipPanel
+              {...selectedBet}
+              teamColor={selectedBet.teamColor}
+              enabled
+              panelMode="sidebar"
+            />
           ) : (
             <div className="invisible p-5 text-sm text-zinc-500">
               Select a moneyline to place a bet.
