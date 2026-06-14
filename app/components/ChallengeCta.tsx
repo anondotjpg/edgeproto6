@@ -614,7 +614,7 @@ function CheckoutContent({
                   <p className="mt-1 text-[13px] leading-5 text-zinc-500">
                     {isPromoInvoice
                       ? "Your promo code covered the full evaluation fee."
-                      : "Send the exact amount below to the Relay deposit address."}
+                      : "Send the exact amount to the deposit address."}
                   </p>
                 </div>
 
