@@ -290,7 +290,7 @@ function InfoCard({
   action?: ReactNode;
 }) {
   return (
-    <div className="relative rounded-2xl border border-zinc-900 bg-black/30 p-4">
+    <div className="relative rounded-2xl border border-zinc-800 bg-black/30 p-4">
       {action ? <div className="absolute right-3 top-3">{action}</div> : null}
 
       <p className="pr-9 text-[12px] font-medium text-zinc-500">{label}</p>
@@ -550,7 +550,7 @@ function CheckoutContent({
                 />
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-zinc-900 bg-black/30 p-4">
+                  <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
                     <p className="text-[12px] font-medium text-zinc-500">
                       Time left
                     </p>
@@ -566,7 +566,7 @@ function CheckoutContent({
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-zinc-900 bg-black/30 p-4">
+                  <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
                     <p className="text-[12px] font-medium text-zinc-500">
                       Relay status
                     </p>
