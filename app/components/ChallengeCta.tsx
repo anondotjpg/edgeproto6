@@ -463,11 +463,6 @@ function CheckoutContent({
                 <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
                   Choose payment method
                 </h3>
-
-                <p className="mt-1 text-[13px] leading-5 text-zinc-500">
-                  Pay with SOL, ETH, or BTC. Relay converts the payment to USDC
-                  on Solana.
-                </p>
               </div>
 
               <div className="mt-5 rounded-2xl border border-zinc-800 bg-black/30 p-3">
