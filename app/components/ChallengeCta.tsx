@@ -31,7 +31,7 @@ type PromoPreview = {
 
 type DepositInvoice = {
   id: string;
-  provider: "relay";
+  provider: "relay" | "promo";
   chain: DepositChain;
   asset: "SOL" | "ETH" | "BTC";
   deposit_address: string;
@@ -427,22 +427,26 @@ function CheckoutContent({
   const cleanPromoCode = normalizePromoInput(promoCode);
   const isPromoApplied =
     Boolean(appliedPromo?.code) && appliedPromo?.code === cleanPromoCode;
+  const isFreePromoApplied = isPromoApplied && appliedPromo?.finalCents === 0;
+  const isPromoInvoice = invoice?.provider === "promo";
 
   return (
     <>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-zinc-500">
-            {accountTitle}
-          </p>
+      <div>
+        <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-zinc-500">
+          {accountTitle}
+        </p>
 
-          <h2 className="mt-1 text-[24px] font-semibold leading-tight tracking-tight text-zinc-50">
-            Start challenge
-          </h2>
-        </div>
+        <h2 className="mt-1 text-[24px] font-semibold leading-tight tracking-tight text-zinc-50">
+          Start challenge
+        </h2>
+      </div>
 
-        <div className="shrink-0 pt-1.5">
-          <StepDots step={step} />
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <StepDots step={step} />
+
+        <div className="text-[12px] font-medium text-zinc-500">
+          Step {getStepIndex(step) + 1} of 2
         </div>
       </div>
 
@@ -515,45 +519,55 @@ function CheckoutContent({
                 ) : null}
               </div>
 
-              <div className="mt-3 grid gap-2.5">
-                {PAYMENT_METHODS.map((method) => {
-                  const loading = creatingChain === method.chain;
-                  const disabled = Boolean(creatingChain);
+              {isFreePromoApplied ? (
+                <OffsetButton
+                  onClick={() => createInvoice("solana")}
+                  disabled={Boolean(creatingChain)}
+                  className="mt-3"
+                >
+                  {creatingChain ? "Creating account..." : "Create free account"}
+                </OffsetButton>
+              ) : (
+                <div className="mt-3 grid gap-2.5">
+                  {PAYMENT_METHODS.map((method) => {
+                    const loading = creatingChain === method.chain;
+                    const disabled = Boolean(creatingChain);
 
-                  return (
-                    <button
-                      key={method.chain}
-                      type="button"
-                      onClick={() => createInvoice(method.chain)}
-                      disabled={disabled}
-                      className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-zinc-800 bg-black/30 px-4 py-3.5 text-left transition-colors hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <PaymentBadge
-                          asset={method.asset}
-                          iconSrc={method.iconSrc}
-                        />
+                    return (
+                      <button
+                        key={method.chain}
+                        type="button"
+                        onClick={() => createInvoice(method.chain)}
+                        disabled={disabled}
+                        className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-zinc-800 bg-black/30 px-4 py-3.5 text-left transition-colors hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <PaymentBadge
+                            asset={method.asset}
+                            iconSrc={method.iconSrc}
+                          />
 
-                        <div className="min-w-0">
-                          <div className="text-[15px] font-semibold text-zinc-100">
-                            {method.title}
-                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[15px] font-semibold text-zinc-100">
+                              {method.title}
+                            </div>
 
-                          <div className="mt-0.5 text-[12px] text-zinc-500">
-                            {loading
-                              ? "Creating deposit..."
-                              : `${method.subtitle} on ${method.network}`}
+                            <div className="mt-0.5 text-[12px] text-zinc-500">
+                              {loading
+                                ? "Creating deposit..."
+                                : `${method.subtitle} on ${method.network}`}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[12px] font-bold text-zinc-300">
-                        {method.asset}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                        <div className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[12px] font-bold text-zinc-300">
+                          {method.asset}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {error ? (
                 <div className="mt-3 rounded-2xl border border-red-950 bg-red-950/30 px-4 py-3 text-[13px] leading-5 text-red-300">
@@ -563,8 +577,9 @@ function CheckoutContent({
 
               <div className="mt-auto pt-5">
                 <p className="text-center text-[12px] leading-5 text-zinc-600">
-                  Do not send Lightning BTC. Use standard Bitcoin Network for
-                  BTC deposits.
+                  {isFreePromoApplied
+                    ? "Testing promo creates an account instantly without crypto."
+                    : "Do not send Lightning BTC. Use standard Bitcoin Network for BTC deposits."}
                 </p>
               </div>
             </motion.div>
@@ -582,17 +597,41 @@ function CheckoutContent({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
-                    Send {invoice.asset} deposit
+                    {isPromoInvoice
+                      ? "Account ready"
+                      : `Send ${invoice.asset} deposit`}
                   </h3>
 
                   <p className="mt-1 text-[13px] leading-5 text-zinc-500">
-                    Send the exact amount below to the Relay deposit address.
+                    {isPromoInvoice
+                      ? "Your promo code covered the full evaluation fee."
+                      : "Send the exact amount below to the Relay deposit address."}
                   </p>
                 </div>
 
                 <StatusPill status={invoice.status} />
               </div>
 
+              {isPromoInvoice ? (
+                <div className="mt-5 grid gap-3">
+                  <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-zinc-500">
+                        Promo {invoice.promo_code}
+                      </span>
+
+                      <span className="font-semibold text-zinc-100">
+                        -{formatCents(invoice.discount_amount_cents ?? 0)}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 flex items-center justify-between border-t border-zinc-900 pt-3 text-[12px]">
+                      <span className="text-zinc-500">Total paid</span>
+                      <span className="font-semibold text-zinc-100">$0.00</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
               <div className="mt-5 grid gap-3">
                 <div className="relative rounded-2xl border border-zinc-800 bg-black/30 p-4">
                   <div className="absolute right-3 top-3">
@@ -677,6 +716,8 @@ function CheckoutContent({
                   </div>
                 </div>
               </div>
+
+              )}
 
               {invoice.status === "paid" && invoice.credited_account_id ? (
                 <div className="mt-auto pt-5">

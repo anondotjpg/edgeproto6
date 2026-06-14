@@ -32,7 +32,6 @@ type RelayQuoteResult = {
 const RELAY_API_BASE = process.env.RELAY_API_BASE ?? "https://api.relay.link";
 const INVOICE_EXPIRY_MS = 10 * 60 * 1000;
 
-// Keep this at 0.01 while testing. Set to 1 for real production pricing.
 const RELAY_QUOTE_AMOUNT_MULTIPLIER = Number(
   process.env.RELAY_QUOTE_AMOUNT_MULTIPLIER ?? "0.01",
 );
@@ -42,9 +41,33 @@ const DAILY_LOSS_PERCENT = 2;
 const TOTAL_LOSS_PERCENT = 5;
 const MAX_RISK_PER_TRADE_PERCENT = 5;
 
+const INVOICE_SELECT = `
+  id,
+  provider,
+  chain,
+  asset,
+  deposit_address,
+  relay_deposit_address,
+  relay_request_id,
+  relay_status,
+  expected_amount_display,
+  expected_destination_amount_display,
+  destination_address,
+  status,
+  expires_at,
+  tx_hash,
+  confirmations,
+  credited_account_id,
+  relay_in_tx_hashes,
+  relay_out_tx_hashes,
+  promo_code,
+  subtotal_amount_cents,
+  discount_amount_cents,
+  final_amount_cents
+`;
+
 function getAccountRuleAmounts(planSize: number) {
   return {
-    profitTargetAmount: Math.round(planSize * (PROFIT_TARGET_PERCENT / 100)),
     dailyLossLimitAmount: Math.round(planSize * (DAILY_LOSS_PERCENT / 100)),
     totalLossLimitAmount: Math.round(planSize * (TOTAL_LOSS_PERCENT / 100)),
     maxRiskAmount: Math.round(planSize * (MAX_RISK_PER_TRADE_PERCENT / 100)),
@@ -410,6 +433,167 @@ async function upsertUser({
   return insertedUser.id as string;
 }
 
+async function createFreePromoInvoice({
+  userId,
+  planKey,
+  planSize,
+  chain,
+  promo,
+}: {
+  userId: string;
+  planKey: PlanKey;
+  planSize: number;
+  chain: DepositChain;
+  promo: {
+    code: string | null;
+    promoCodeId: string | null;
+    subtotalCents: number;
+    discountCents: number;
+    finalCents: number;
+  };
+}) {
+  const origin = CHAIN_CONFIG[chain];
+  const { dailyLossLimitAmount, totalLossLimitAmount, maxRiskAmount } =
+    getAccountRuleAmounts(planSize);
+
+  const nowIso = new Date().toISOString();
+
+  const { data: invoiceDraft, error: invoiceDraftError } = await supabaseAdmin
+    .from("crypto_deposit_invoices")
+    .insert({
+      user_id: userId,
+      plan_key: planKey,
+
+      provider: "promo",
+      chain,
+      asset: origin.asset,
+
+      deposit_address: "PROMO_CODE",
+      relay_deposit_address: null,
+      relay_request_id: null,
+      relay_status: "success",
+
+      relay_origin_chain_id: origin.relayChainId,
+      relay_origin_currency: origin.relayOriginCurrency,
+      relay_destination_chain_id: DESTINATION_CONFIG.chainId,
+      relay_destination_currency: DESTINATION_CONFIG.currency,
+      relay_quote: null,
+
+      expected_from_address: null,
+      expected_amount_atomic: "0",
+      expected_amount_display: "0",
+
+      expected_destination_amount_atomic: "0",
+      expected_destination_amount_display: "0",
+      destination_address: DESTINATION_CONFIG.recipient,
+
+      status: "processing",
+      expires_at: nowIso,
+
+      account_starting_balance: planSize,
+      account_max_risk_amount: maxRiskAmount,
+      account_daily_loss_limit_amount: dailyLossLimitAmount,
+      account_total_loss_limit_amount: totalLossLimitAmount,
+      account_profit_target_percent: PROFIT_TARGET_PERCENT,
+
+      one_time_fee: 0,
+
+      promo_code_id: promo.promoCodeId,
+      promo_code: promo.code,
+      subtotal_amount_cents: promo.subtotalCents,
+      discount_amount_cents: promo.discountCents,
+      final_amount_cents: promo.finalCents,
+    })
+    .select("id")
+    .single();
+
+  if (invoiceDraftError) {
+    throw invoiceDraftError;
+  }
+
+  if (promo.promoCodeId && promo.discountCents > 0) {
+    const { error: redemptionError } = await supabaseAdmin
+      .from("promo_redemptions")
+      .insert({
+        promo_code_id: promo.promoCodeId,
+        user_id: userId,
+        invoice_id: invoiceDraft.id,
+        status: "redeemed",
+        plan_key: planKey,
+        subtotal_cents: promo.subtotalCents,
+        discount_cents: promo.discountCents,
+        final_cents: promo.finalCents,
+        redeemed_at: nowIso,
+      });
+
+    if (redemptionError) {
+      await supabaseAdmin
+        .from("crypto_deposit_invoices")
+        .update({
+          status: "invalid",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", invoiceDraft.id);
+
+      throw redemptionError;
+    }
+  }
+
+  const { data: account, error: accountError } = await supabaseAdmin
+    .from("challenge_accounts")
+    .insert({
+      user_id: userId,
+      plan_key: planKey,
+      plan_size: planSize,
+      one_time_fee: 0,
+      status: "active",
+      starting_balance: planSize,
+      current_balance: planSize,
+      reserved_risk: 0,
+      max_risk_amount: maxRiskAmount,
+      daily_loss_limit_amount: dailyLossLimitAmount,
+      total_loss_limit_amount: totalLossLimitAmount,
+    })
+    .select("id")
+    .single();
+
+  if (accountError) {
+    await supabaseAdmin
+      .from("crypto_deposit_invoices")
+      .update({
+        status: "invalid",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", invoiceDraft.id);
+
+    await supabaseAdmin
+      .from("promo_redemptions")
+      .update({ status: "expired" })
+      .eq("invoice_id", invoiceDraft.id)
+      .eq("status", "redeemed");
+
+    throw accountError;
+  }
+
+  const { data: invoice, error: invoiceError } = await supabaseAdmin
+    .from("crypto_deposit_invoices")
+    .update({
+      status: "paid",
+      paid_at: new Date().toISOString(),
+      credited_account_id: account.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", invoiceDraft.id)
+    .select(INVOICE_SELECT)
+    .single();
+
+  if (invoiceError) {
+    throw invoiceError;
+  }
+
+  return invoice;
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as CreateDepositBody;
@@ -473,6 +657,33 @@ export async function POST(req: Request) {
 
     const finalCents = promo.finalCents;
     const finalFeeAmount = centsToDollars(finalCents);
+
+    if (finalCents === 0) {
+      const invoice = await createFreePromoInvoice({
+        userId,
+        planKey,
+        planSize,
+        chain,
+        promo: {
+          code: promo.code,
+          promoCodeId: promo.promoCodeId,
+          subtotalCents: promo.subtotalCents,
+          discountCents: promo.discountCents,
+          finalCents: promo.finalCents,
+        },
+      });
+
+      return NextResponse.json({
+        invoice,
+        promo: {
+          code: promo.code,
+          subtotalCents: promo.subtotalCents,
+          discountCents: promo.discountCents,
+          finalCents: promo.finalCents,
+        },
+      });
+    }
+
     const quoteCents = getQuoteCents(finalCents);
     const destinationAmountAtomic = centsToUsdcAtomic(quoteCents);
     const expectedDestinationAmountDisplay = usdcAtomicToDisplay(
@@ -484,12 +695,8 @@ export async function POST(req: Request) {
       destinationAmountAtomic,
     });
 
-    const {
-      profitTargetAmount,
-      dailyLossLimitAmount,
-      totalLossLimitAmount,
-      maxRiskAmount,
-    } = getAccountRuleAmounts(planSize);
+    const { dailyLossLimitAmount, totalLossLimitAmount, maxRiskAmount } =
+      getAccountRuleAmounts(planSize);
 
     const expiresAt = new Date(Date.now() + INVOICE_EXPIRY_MS);
     const origin = CHAIN_CONFIG[chain];
@@ -540,32 +747,7 @@ export async function POST(req: Request) {
         discount_amount_cents: promo.discountCents,
         final_amount_cents: promo.finalCents,
       })
-      .select(
-        `
-        id,
-        provider,
-        chain,
-        asset,
-        deposit_address,
-        relay_deposit_address,
-        relay_request_id,
-        relay_status,
-        expected_amount_display,
-        expected_destination_amount_display,
-        destination_address,
-        status,
-        expires_at,
-        tx_hash,
-        confirmations,
-        credited_account_id,
-        relay_in_tx_hashes,
-        relay_out_tx_hashes,
-        promo_code,
-        subtotal_amount_cents,
-        discount_amount_cents,
-        final_amount_cents
-      `,
-      )
+      .select(INVOICE_SELECT)
       .single();
 
     if (invoiceError) {
