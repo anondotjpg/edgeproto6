@@ -725,12 +725,12 @@ const AccountSelectSection = memo(function AccountSelectSection({
     >
       <div className="flex h-[18px] items-center justify-between gap-3">
         <div className="text-sm font-medium leading-[18px] text-zinc-300">
-          Account(s)
+          Accounts
         </div>
 
         {showAccountScrollHint ? (
           <div className="shrink-0 text-[11px] font-medium leading-[18px] text-zinc-500">
-            Swipe to view more
+            Swipe to view
           </div>
         ) : reserveAccountControlSpace ? (
           <div
