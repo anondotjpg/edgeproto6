@@ -608,7 +608,7 @@ function CheckoutContent({
                   <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
                     {isPromoInvoice
                       ? "Account ready"
-                      : `Send ${invoice.asset} deposit`}
+                      : `Send ${invoice.asset}`}
                   </h3>
 
                   <p className="mt-1 text-[13px] leading-5 text-zinc-500">
