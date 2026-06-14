@@ -68,6 +68,11 @@ type ChallengeCtaProps = {
   planKey: PlanKey;
 };
 
+const PLAN_FEE_LABELS: Partial<Record<PlanKey, string>> = {
+  "10000": "$299",
+  "5000": "$179",
+};
+
 const PAYMENT_METHODS: {
   chain: DepositChain;
   asset: "SOL" | "ETH" | "BTC";
@@ -186,6 +191,30 @@ function getAccountTitle(planKey: PlanKey) {
   }
 
   return `${accountSize / 1000}K Account`;
+}
+
+function getPlanFeeLabel(planKey: PlanKey) {
+  return PLAN_FEE_LABELS[planKey] ?? "Evaluation fee";
+}
+
+function getDiscountedFeeLabel({
+  feeLabel,
+  appliedPromo,
+  invoice,
+}: {
+  feeLabel: string;
+  appliedPromo: PromoPreview | null;
+  invoice?: DepositInvoice | null;
+}) {
+  if (typeof invoice?.final_amount_cents === "number") {
+    return formatCents(invoice.final_amount_cents);
+  }
+
+  if (typeof appliedPromo?.finalCents === "number") {
+    return formatCents(appliedPromo.finalCents);
+  }
+
+  return feeLabel;
 }
 
 function getStepIndex(step: DepositStep) {
@@ -398,6 +427,7 @@ function PaymentBadge({
 
 function CheckoutContent({
   accountTitle,
+  feeLabel,
   step,
   setStep,
   invoice,
@@ -416,6 +446,7 @@ function CheckoutContent({
   applyPromoCode,
 }: {
   accountTitle: string;
+  feeLabel: string;
   step: DepositStep;
   setStep: (step: DepositStep) => void;
   invoice: DepositInvoice | null;
@@ -434,6 +465,11 @@ function CheckoutContent({
   applyPromoCode: () => void;
 }) {
   const cleanPromoCode = normalizePromoInput(promoCode);
+  const displayFeeLabel = getDiscountedFeeLabel({
+    feeLabel,
+    appliedPromo,
+    invoice,
+  });
   const isPromoApplied =
     Boolean(appliedPromo?.code) && appliedPromo?.code === cleanPromoCode;
   const isFreePromoApplied = isPromoApplied && appliedPromo?.finalCents === 0;
@@ -449,7 +485,7 @@ function CheckoutContent({
           </p>
 
           <h2 className="mt-1 text-[24px] font-semibold leading-tight tracking-tight text-zinc-50">
-            Start challenge
+            {displayFeeLabel}
           </h2>
         </div>
 
@@ -471,7 +507,7 @@ function CheckoutContent({
             >
               <div>
                 <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
-                  Choose payment method
+                  Choose payment
                 </h3>
               </div>
 
@@ -585,7 +621,7 @@ function CheckoutContent({
               ) : null}
 
               <div className="mt-auto pt-5">
-                <p className="text-center text-[12px] leading-5 text-zinc-600">
+                <p className="hidden text-center text-[12px] leading-5 text-zinc-600">
                   {isFreePromoApplied
                     ? "Testing promo creates an account instantly without crypto."
                     : "Do not send Lightning BTC. Use standard Bitcoin Network for BTC deposits."}
@@ -656,12 +692,12 @@ function CheckoutContent({
                       Send exactly
                     </p>
 
-                    <div className="mt-1.5 flex items-end justify-between gap-3">
+                    <div className="mt-1.5 flex flex-wrap items-end gap-x-2 gap-y-1 pr-8">
                       <p className="break-all text-[28px] font-semibold leading-none tracking-tight text-zinc-50">
                         {invoice.expected_amount_display}
                       </p>
 
-                      <p className="pb-0.5 text-[13px] font-bold text-zinc-400">
+                      <p className="pb-0.5 text-[13px] font-bold leading-none text-zinc-400">
                         {invoice.asset}
                       </p>
                     </div>
@@ -696,9 +732,9 @@ function CheckoutContent({
                   ) : null}
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+                    <div className="">
                       <p className="text-[12px] font-medium text-zinc-500">
-                        Time left
+                        Expires in
                       </p>
 
                       <p className="mt-1 text-[18px] font-semibold text-zinc-100">
@@ -712,7 +748,7 @@ function CheckoutContent({
                       </p>
                     </div>
 
-                    <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+                    <div className="">
                       <p className="text-[12px] font-medium text-zinc-500">
                         Relay status
                       </p>
@@ -787,6 +823,12 @@ export default function ChallengeCta({
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
 
   const accountTitle = getAccountTitle(planKey);
+  const feeLabel = getPlanFeeLabel(planKey);
+  const displayFeeLabel = getDiscountedFeeLabel({
+    feeLabel,
+    appliedPromo,
+    invoice,
+  });
 
   const privyUserId = user?.id ?? null;
   const email = user?.email?.address ?? null;
@@ -1038,6 +1080,7 @@ export default function ChallengeCta({
   const checkoutContent = (
     <CheckoutContent
       accountTitle={accountTitle}
+      feeLabel={feeLabel}
       step={step}
       setStep={setStep}
       invoice={invoice}
@@ -1092,7 +1135,7 @@ export default function ChallengeCta({
         >
           <DrawerContent className="overflow-hidden border-zinc-800 bg-zinc-950 text-white outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 data-[state=open]:outline-none data-[vaul-drawer-direction=bottom]:max-h-none">
             <DrawerHeader className="sr-only">
-              <DrawerTitle>Start challenge</DrawerTitle>
+              <DrawerTitle>{displayFeeLabel}</DrawerTitle>
               <DrawerDescription>
                 Choose a payment method and send a crypto deposit to start a
                 challenge account.
