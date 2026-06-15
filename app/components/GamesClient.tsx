@@ -556,7 +556,7 @@ function MoneylineCell({
 
 function DateMarketHeader({ date }: { date: string }) {
   return (
-    <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_84px] xl:items-end xl:gap-2 xl:pr-3">
+    <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_84px] xl:items-end xl:gap-2">
       <div className="text-[18px] font-semibold leading-none tracking-tight text-zinc-100">
         {date}
       </div>
@@ -681,7 +681,7 @@ function GameCard({
         </div>
       </article>
 
-      <article className="relative hidden xl:block xl:rounded-xl xl:border xl:border-zinc-800 xl:p-3">
+      <article className="relative hidden xl:block">
         <GameCardHeader game={game} eventHref={eventHref} />
 
         <div className="grid grid-cols-[minmax(0,1fr)_84px] gap-2">
