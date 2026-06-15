@@ -372,7 +372,7 @@ export default function AccountsPage() {
       <div className="relative min-h-screen overflow-hidden bg-[#09090b] text-white">
         <DotPatternBackground />
 
-        <div className="relative z-10 flex min-h-screen items-center pt-10 lg:pt-0">
+        <div className="relative z-10 flex min-h-screen items-center pt-10 xl:pt-0">
           <div className="mx-auto w-full max-w-[1480px] px-5 py-8 pb-24 sm:px-6 md:pb-8">
             <OwnedAccountsSection />
 
