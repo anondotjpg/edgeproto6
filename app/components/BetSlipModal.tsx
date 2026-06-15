@@ -132,14 +132,18 @@ function getMatchupDisplayName({
 const HOLD_TO_PLACE_MS = 1250;
 
 const ACCOUNT_ROW_CLASS =
-  "flex gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "flex snap-x snap-mandatory scroll-smooth gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 const ACCOUNT_CARD_CLASS =
-  "h-[80px] overflow-hidden rounded-xl border p-2 text-left transition-colors";
+  "h-[80px] snap-start overflow-hidden rounded-xl border p-2 text-left transition-colors";
 
 const ACCOUNT_CARD_STYLE: CSSProperties = {
   flex: "0 0 calc((100% - 24px) / 3)",
 };
+
+const ACCOUNT_CARDS_PER_PAGE = 3;
+const ACCOUNT_CARD_GAP_PX = 12;
+const ACCOUNT_SCROLL_EPSILON_PX = 2;
 
 const ACCOUNT_SELECT_SHELL_CLASS = "mt-4 h-[112px]";
 const ACCOUNT_LIST_CLASS = "mt-2.5 h-[88px] overflow-hidden";
@@ -428,6 +432,7 @@ function SkeletonBlock({ className = "" }: { className?: string }) {
 function AccountOptionSkeleton() {
   return (
     <div
+      data-account-card=""
       style={ACCOUNT_CARD_STYLE}
       className={`${ACCOUNT_CARD_CLASS} border-zinc-800 bg-black/30`}
     >
@@ -742,25 +747,64 @@ const AccountSelectSection = memo(function AccountSelectSection({
   const [canScrollBack, setCanScrollBack] = useState(false);
   const [canScrollForward, setCanScrollForward] = useState(false);
 
+  function getAccountScrollMetrics(row: HTMLDivElement) {
+    const firstCard = row.querySelector<HTMLElement>("[data-account-card]");
+    const cardWidth =
+      firstCard?.getBoundingClientRect().width ??
+      (row.clientWidth -
+        ACCOUNT_CARD_GAP_PX * (ACCOUNT_CARDS_PER_PAGE - 1)) /
+        ACCOUNT_CARDS_PER_PAGE;
+
+    const pageStep =
+      cardWidth * ACCOUNT_CARDS_PER_PAGE +
+      ACCOUNT_CARD_GAP_PX * ACCOUNT_CARDS_PER_PAGE;
+    const maxScrollLeft = Math.max(0, row.scrollWidth - row.clientWidth);
+
+    return {
+      maxScrollLeft,
+      pageStep: Math.max(1, pageStep),
+    };
+  }
+
+  function getSnappedAccountScrollLeft(row: HTMLDivElement, target: number) {
+    const { maxScrollLeft, pageStep } = getAccountScrollMetrics(row);
+
+    if (maxScrollLeft <= ACCOUNT_SCROLL_EPSILON_PX) return 0;
+    if (target >= maxScrollLeft - ACCOUNT_SCROLL_EPSILON_PX) {
+      return maxScrollLeft;
+    }
+
+    const pageIndex = Math.max(0, Math.round(target / pageStep));
+    const snappedTarget = pageIndex * pageStep;
+
+    return Math.min(Math.max(snappedTarget, 0), maxScrollLeft);
+  }
+
   function updateAccountScrollState() {
     const row = accountRowRef.current;
     if (!row) return;
 
-    const maxScrollLeft = row.scrollWidth - row.clientWidth;
+    const { maxScrollLeft } = getAccountScrollMetrics(row);
 
-    setCanScrollBack(row.scrollLeft > 2);
-    setCanScrollForward(row.scrollLeft < maxScrollLeft - 2);
+    setCanScrollBack(row.scrollLeft > ACCOUNT_SCROLL_EPSILON_PX);
+    setCanScrollForward(
+      row.scrollLeft < maxScrollLeft - ACCOUNT_SCROLL_EPSILON_PX,
+    );
   }
 
   function scrollAccounts(direction: "back" | "forward") {
     const row = accountRowRef.current;
     if (!row) return;
 
+    const { pageStep } = getAccountScrollMetrics(row);
+    const currentLeft = getSnappedAccountScrollLeft(row, row.scrollLeft);
+    const nextLeft = getSnappedAccountScrollLeft(
+      row,
+      direction === "back" ? currentLeft - pageStep : currentLeft + pageStep,
+    );
+
     row.scrollTo({
-      left:
-        direction === "back"
-          ? row.scrollLeft - row.clientWidth
-          : row.scrollLeft + row.clientWidth,
+      left: nextLeft,
       behavior: "smooth",
     });
   }
@@ -877,6 +921,7 @@ const AccountSelectSection = memo(function AccountSelectSection({
               return (
                 <button
                   key={account.id}
+                  data-account-card=""
                   type="button"
                   style={ACCOUNT_CARD_STYLE}
                   onClick={() => {
