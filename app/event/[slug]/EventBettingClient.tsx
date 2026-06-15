@@ -349,7 +349,7 @@ function MobileMoneylineModalButton({
     <div
       className={[
         "group relative rounded-xl",
-        betData.isLive ? "bg-zinc-700" : "bg-zinc-800",
+        betData.isLive ? "bg-zinc-800/80" : "bg-zinc-800",
       ].join(" ")}
       style={{
         paddingBottom: "2px",
@@ -361,7 +361,7 @@ function MobileMoneylineModalButton({
         teamColor={betData.teamColor}
         triggerClassName={[
           "peer flex h-10 w-full translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl px-3 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
-          betData.isLive ? "bg-zinc-800" : "bg-zinc-900",
+          betData.isLive ? "bg-zinc-900/85" : "bg-zinc-900",
         ].join(" ")}
         triggerContentClassName="sr-only"
       />
@@ -371,7 +371,7 @@ function MobileMoneylineModalButton({
         style={faceStyle}
       >
         {betData.isLive ? (
-          <FaLock className="h-3.5 w-3.5 shrink-0 text-zinc-300" />
+          <FaLock className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
         ) : (
           <>
             <span className="text-[10px] font-bold leading-none tracking-[0.12em] text-zinc-200">
@@ -499,7 +499,7 @@ function DesktopTeamPanel({
             className={[
               "relative rounded-xl",
               isLive
-                ? "bg-zinc-700"
+                ? "bg-zinc-800/80"
                 : selected
                   ? "bg-zinc-800 xl:bg-zinc-600"
                   : "bg-zinc-800",
@@ -515,7 +515,7 @@ function DesktopTeamPanel({
                 teamColor={betData.teamColor}
                 triggerClassName={[
                   "peer flex h-[42px] min-w-[84px] translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0",
-                  isLive ? "bg-zinc-800" : "bg-zinc-900",
+                  isLive ? "bg-zinc-900/85" : "bg-zinc-900",
                 ].join(" ")}
                 triggerContentClassName="sr-only"
               />
@@ -525,7 +525,7 @@ function DesktopTeamPanel({
                 style={faceStyle}
               >
                 {isLive ? (
-                  <FaLock className="h-3.5 w-3.5 text-zinc-300" />
+                  <FaLock className="h-3.5 w-3.5 text-zinc-500" />
                 ) : (
                   <span className="text-[13px] font-semibold leading-none tracking-tight text-zinc-100">
                     {betData.odds}
@@ -541,7 +541,7 @@ function DesktopTeamPanel({
               className={[
                 "hidden h-[42px] min-w-[84px] translate-y-[-2px] items-center justify-center overflow-hidden rounded-xl px-2.5 text-center transition-transform duration-100 xl:flex",
                 isLive
-                  ? "cursor-not-allowed bg-zinc-800"
+                  ? "cursor-not-allowed bg-zinc-900/85"
                   : selected
                     ? "cursor-pointer bg-zinc-700 hover:translate-y-[-1px] active:translate-y-0"
                     : "cursor-pointer bg-zinc-900 hover:translate-y-[-1px] active:translate-y-0",
@@ -549,7 +549,7 @@ function DesktopTeamPanel({
               style={faceStyle}
             >
               {isLive ? (
-                <FaLock className="h-3.5 w-3.5 text-zinc-300" />
+                <FaLock className="h-3.5 w-3.5 text-zinc-500" />
               ) : (
                 <span className="text-[13px] font-semibold leading-none tracking-tight text-zinc-100">
                   {betData.odds}
