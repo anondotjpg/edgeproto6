@@ -109,8 +109,6 @@ const PAYMENT_METHODS: {
   },
 ];
 
-const ELLIPSIS_STEPS = [".", "..", "...", ""];
-
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -188,11 +186,6 @@ function normalizePromoInput(value: string) {
   return value.toUpperCase().replace(/\s+/g, "");
 }
 
-function shortenAddress(address: string) {
-  if (address.length <= 14) return address;
-  return `${address.slice(0, 6)}...${address.slice(-6)}`;
-}
-
 function getAccountTitle(planKey: PlanKey) {
   const accountSize = Number(planKey);
 
@@ -233,11 +226,6 @@ function getDiscountedFeeLabel({
   return feeLabel;
 }
 
-function getStepIndex(step: DepositStep) {
-  if (step === "method") return 0;
-  return 1;
-}
-
 function getStatusLabel(status: DepositInvoice["status"]) {
   if (status === "processing") return "processing";
   if (status === "refunded") return "refunded";
@@ -248,50 +236,11 @@ function isTerminalStatus(status: DepositInvoice["status"]) {
   return ["paid", "expired", "failed", "refunded", "invalid"].includes(status);
 }
 
-function StepDots({ step }: { step: DepositStep }) {
-  const activeIndex = getStepIndex(step);
-
-  return (
-    <div className="flex h-3 w-16 items-center justify-end gap-3">
-      {[0, 1].map((index) => (
-        <div
-          key={index}
-          className={[
-            "h-3 shrink-0 rounded-full transition-[width,background-color] duration-200",
-            index === activeIndex ? "w-10 bg-zinc-100" : "w-3 bg-zinc-700",
-          ].join(" ")}
-        />
-      ))}
-    </div>
-  );
-}
-
 function StatusPill({ status }: { status: DepositInvoice["status"] }) {
   return (
     <div className="rounded-full bg-zinc-900 px-3 py-1 text-[12px] font-semibold capitalize text-zinc-300">
       {getStatusLabel(status)}
     </div>
-  );
-}
-
-function LoadingEllipsis() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setIndex((current) => (current + 1) % ELLIPSIS_STEPS.length);
-    }, 420);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  return (
-    <span
-      aria-hidden="true"
-      className="inline-block w-[1.15em] text-left align-baseline text-zinc-600"
-    >
-      {ELLIPSIS_STEPS[index]}
-    </span>
   );
 }
 
@@ -494,25 +443,21 @@ function CheckoutContent({
 
   return (
     <>
-      <div className="flex min-h-[58px] items-start justify-between gap-4">
+      <div className="flex min-h-[42px] items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="h-4 text-[12px] font-medium uppercase leading-4 tracking-[0.16em] text-zinc-500">
+          <p className="block text-[12px] font-medium uppercase leading-none tracking-[0.16em] text-zinc-500">
             {accountTitle}
           </p>
-
-          <h2 className="mt-1 h-8 text-[24px] font-semibold leading-8 tracking-tight text-zinc-50 tabular-nums">
-            <span className="inline-block min-w-[88px]">
-              {displayFeeLabel}
-            </span>
-          </h2>
         </div>
 
-        <div className="flex h-8 w-16 shrink-0 justify-end pt-1.5">
-          <StepDots step={step} />
+        <div className="flex min-w-[88px] shrink-0 items-start justify-end">
+          <span className="block text-[24px] font-semibold leading-none tracking-tight text-zinc-50 tabular-nums">
+            {displayFeeLabel}
+          </span>
         </div>
       </div>
 
-      <div className="mt-5 min-h-[350px]">
+      <div className="mt-4 min-h-[336px]">
         <AnimatePresence mode="wait">
           {step === "method" ? (
             <motion.div
@@ -521,10 +466,10 @@ function CheckoutContent({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -18 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="flex min-h-[350px] flex-col"
+              className="flex min-h-[336px] flex-col"
             >
               <div>
-                <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
+                <h3 className="text-[18px] font-semibold leading-none tracking-tight text-zinc-50">
                   Choose payment
                 </h3>
               </div>
@@ -586,7 +531,9 @@ function CheckoutContent({
                   disabled={Boolean(creatingChain)}
                   className="mt-3"
                 >
-                  {creatingChain ? "Creating account..." : "Create free account"}
+                  {creatingChain
+                    ? "Creating account..."
+                    : "Create free account"}
                 </OffsetButton>
               ) : (
                 <div className="mt-3 grid gap-2.5">
@@ -636,13 +583,7 @@ function CheckoutContent({
                 </div>
               ) : null}
 
-              <div className="mt-auto pt-5">
-                <p className="hidden text-center text-[12px] leading-5 text-zinc-600">
-                  {isFreePromoApplied
-                    ? "Testing promo creates an account instantly without crypto."
-                    : "Do not send Lightning BTC. Use standard Bitcoin Network for BTC deposits."}
-                </p>
-              </div>
+              <div className="mt-auto" />
             </motion.div>
           ) : null}
 
@@ -653,14 +594,12 @@ function CheckoutContent({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -18 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="flex min-h-[350px] flex-col"
+              className="flex min-h-[336px] flex-col"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="text-[18px] font-semibold tracking-tight text-zinc-50">
-                    {isPromoInvoice
-                      ? "Account ready"
-                      : `Send ${invoice.asset}`}
+                  <h3 className="text-[18px] font-semibold leading-none tracking-tight text-zinc-50">
+                    {isPromoInvoice ? "Account ready" : `Send ${invoice.asset}`}
                   </h3>
 
                   <p className="mt-1 text-[13px] leading-5 text-zinc-500">
@@ -674,7 +613,7 @@ function CheckoutContent({
               </div>
 
               {isPromoInvoice ? (
-                <div className="mt-5 grid gap-3">
+                <div className="mt-4 grid gap-3">
                   <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
                     <div className="flex items-center justify-between text-[12px]">
                       <span className="text-zinc-500">
@@ -695,7 +634,7 @@ function CheckoutContent({
                   </div>
                 </div>
               ) : (
-                <div className="mt-5 grid gap-3">
+                <div className="mt-4 grid gap-3">
                   <div className="relative rounded-2xl bg-black/30 p-4">
                     <div className="absolute right-3 top-3">
                       <CopyIconButton
@@ -790,13 +729,7 @@ function CheckoutContent({
                   </OffsetButton>
                 </div>
               ) : (
-                <div className="mt-auto pt-5">
-                  <p className="text-center text-[12px] leading-5 text-zinc-600">
-                    Waiting for {invoice.asset} to{" "}
-                    {shortenAddress(invoice.deposit_address)}
-                    <LoadingEllipsis />
-                  </p>
-                </div>
+                <div className="mt-auto" />
               )}
 
               {invoice.status !== "paid" ? (
@@ -975,7 +908,8 @@ export default function ChallengeCta({
       setCreatingChain(chain);
       setError(null);
 
-      const cleanPromoCode = appliedPromo?.code ?? normalizePromoInput(promoCode);
+      const cleanPromoCode =
+        appliedPromo?.code ?? normalizePromoInput(promoCode);
 
       const response = await fetch("/api/crypto-deposits/create", {
         method: "POST",
@@ -1161,7 +1095,7 @@ export default function ChallengeCta({
             </DrawerHeader>
 
             <div className="mx-auto w-full max-w-[520px] overflow-hidden bg-zinc-950 px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-2">
-              <div className="mx-auto mb-5 h-1.5 w-12 shrink-0 rounded-full bg-zinc-800" />
+              <div className="mx-auto mb-4 h-1.5 w-12 shrink-0 rounded-full bg-zinc-800" />
 
               <div className="max-h-[calc(100dvh-56px)] overflow-y-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {checkoutContent}

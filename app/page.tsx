@@ -70,10 +70,10 @@ type ApiResponse = {
 };
 
 const LEAGUES = [
-  { label: "NBA", tag: 745, league: "nba" },
-  { label: "NHL", tag: 899, league: "nhl" },
   { label: "MLB", tag: 100381, league: "mlb" },
   { label: "WNBA", tag: 100254, league: "wnba" },
+  { label: "NBA", tag: 745, league: "nba" },
+  { label: "NHL", tag: 899, league: "nhl" },
 ] as const;
 
 type LeagueKey = (typeof LEAGUES)[number]["league"];
@@ -112,7 +112,7 @@ export default async function Home({
     (item) => item.league === requestedLeague,
   )
     ? (requestedLeague as LeagueKey)
-    : "nba";
+    : "mlb";
 
   const league =
     data.leagues.find((item) => item.leagueKey === selectedLeague) ??
