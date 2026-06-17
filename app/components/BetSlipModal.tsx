@@ -904,7 +904,7 @@ const AccountSelectSection = memo(function AccountSelectSection({
           <button
             type="button"
             onClick={login}
-            className="flex h-[84px] w-full cursor-pointer items-start rounded-2xl border border-zinc-800 bg-black/30 p-3.5 text-left text-base text-zinc-300"
+            className="flex h-[80px] w-full cursor-pointer items-start rounded-2xl border border-zinc-800 bg-black/30 p-3.5 text-left text-base text-zinc-300"
           >
             <span className="inline underline cursor-pointer">Sign in</span>
             &nbsp;to select an account
@@ -975,7 +975,7 @@ const AccountSelectSection = memo(function AccountSelectSection({
         ) : (
           <Link
             href="/accounts"
-            className="flex h-[84px] w-full cursor-pointer items-start rounded-2xl border border-zinc-800 bg-black/30 p-3.5 text-left text-base text-zinc-300"
+            className="flex h-[80px] w-full cursor-pointer items-start rounded-2xl border border-zinc-800 bg-black/30 p-3.5 text-left text-base text-zinc-300"
           >
             No accounts.&nbsp;<span className="inline underline">Start a challenge</span>
           </Link>
