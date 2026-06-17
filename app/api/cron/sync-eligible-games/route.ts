@@ -10,6 +10,7 @@ import {
 export const dynamic = "force-dynamic";
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+const TEN_DAYS_MS = 10 * TWENTY_FOUR_HOURS_MS;
 const UPSERT_CHUNK_SIZE = 100;
 
 type EligibleGameRow = {
@@ -72,6 +73,12 @@ function gameToRow(game: EventOdds, lastSeenAt: string): EligibleGameRow {
   };
 }
 
+function gameStartsWithinWindow(game: EventOdds, maxCommenceTimeMs: number) {
+  const commenceTimeMs = Date.parse(game.commence_time);
+
+  return Number.isFinite(commenceTimeMs) && commenceTimeMs <= maxCommenceTimeMs;
+}
+
 function chunk<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
 
@@ -86,17 +93,21 @@ export async function POST(request: Request) {
   const unauthorized = requireCronSecret(request);
   if (unauthorized) return unauthorized;
 
-  const syncStartedAt = new Date().toISOString();
-  const oldGameCutoff = new Date(
-    Date.now() - TWENTY_FOUR_HOURS_MS,
-  ).toISOString();
+  const nowMs = Date.now();
+  const syncStartedAt = new Date(nowMs).toISOString();
+  const oldGameCutoff = new Date(nowMs - TWENTY_FOUR_HOURS_MS).toISOString();
+  const futureGameCutoffMs = nowMs + TEN_DAYS_MS;
+  const futureGameCutoff = new Date(futureGameCutoffMs).toISOString();
 
   const leagueResults = await fetchEligibleLeagueGames();
   const successfulLeagueKeys = leagueResults
     .filter((league) => !league.error)
     .map((league) => league.leagueKey);
 
-  const games = flattenLeagueGames(leagueResults);
+  const allGames = flattenLeagueGames(leagueResults);
+  const games = allGames.filter((game) =>
+    gameStartsWithinWindow(game, futureGameCutoffMs),
+  );
   const rows = games.map((game) => gameToRow(game, syncStartedAt));
 
   for (const rowsChunk of chunk(rows, UPSERT_CHUNK_SIZE)) {
@@ -115,6 +126,7 @@ export async function POST(request: Request) {
 
   let deletedClosedOrMissing = 0;
   let deletedOld = 0;
+  let deletedTooFarOut = 0;
 
   if (successfulLeagueKeys.length) {
     const { data, error } = await supabaseAdmin
@@ -151,17 +163,43 @@ export async function POST(request: Request) {
 
   deletedOld = oldRows?.length ?? 0;
 
+  const { data: futureRows, error: futureDeleteError } = await supabaseAdmin
+    .from("eligible_games")
+    .delete()
+    .gt("commence_time", futureGameCutoff)
+    .select("id");
+
+  if (futureDeleteError) {
+    console.error("Eligible games future delete error:", futureDeleteError);
+    return NextResponse.json(
+      { error: futureDeleteError.message || "Failed to clear future games." },
+      { status: 500 },
+    );
+  }
+
+  deletedTooFarOut = futureRows?.length ?? 0;
+
   return NextResponse.json({
     ok: true,
     syncedAt: syncStartedAt,
     saved: rows.length,
+    skippedTooFarOut: allGames.length - games.length,
     deletedClosedOrMissing,
     deletedOld,
-    leagues: leagueResults.map((league) => ({
-      leagueKey: league.leagueKey,
-      saved: league.games.length,
-      error: league.error,
-    })),
+    deletedTooFarOut,
+    maxCommenceTime: futureGameCutoff,
+    leagues: leagueResults.map((league) => {
+      const saved = league.games.filter((game) =>
+        gameStartsWithinWindow(game, futureGameCutoffMs),
+      ).length;
+
+      return {
+        leagueKey: league.leagueKey,
+        saved,
+        skippedTooFarOut: Math.max(league.games.length - saved, 0),
+        error: league.error,
+      };
+    }),
     configuredLeagues: LEAGUES.map((league) => league.key),
   });
 }
