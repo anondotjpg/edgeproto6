@@ -329,10 +329,10 @@ async function createRelayDepositQuote({
     destinationCurrency: DESTINATION_CONFIG.currency,
 
     amount: destinationAmountAtomic.toString(),
-    tradeType: "EXACT_OUTPUT",
+    tradeType: "EXPECTED_OUTPUT",
 
     useDepositAddress: true,
-    strict: true,
+    strict: false,
     refundTo,
     referrer: "edge",
   };
