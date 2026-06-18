@@ -543,14 +543,9 @@ function DesktopTeamPanel({
             <button
               type="button"
               onClick={onSelect}
-              disabled={isLive}
               className={[
-                "hidden h-[42px] min-w-[84px] translate-y-[-2px] items-center justify-center overflow-hidden rounded-xl px-2.5 text-center transition-transform duration-100 xl:flex",
-                isLive
-                  ? "cursor-not-allowed bg-zinc-900"
-                  : selected
-                    ? "cursor-pointer bg-zinc-700 hover:translate-y-[-1px] active:translate-y-0"
-                    : "cursor-pointer bg-zinc-900 hover:translate-y-[-1px] active:translate-y-0",
+                "hidden h-[42px] min-w-[84px] translate-y-[-2px] cursor-pointer items-center justify-center overflow-hidden rounded-xl px-2.5 text-center transition-transform duration-100 hover:translate-y-[-1px] active:translate-y-0 xl:flex",
+                selected ? "bg-zinc-700" : "bg-zinc-900",
               ].join(" ")}
               style={faceStyle}
             >
