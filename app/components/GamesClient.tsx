@@ -796,7 +796,7 @@ export default function GamesClient({
           <LeagueTabs leagues={leagues} selectedLeague={selectedLeague} />
         </header>
 
-        <div className="mt-4 grid gap-6 md:mt-8 xl:grid-cols-[minmax(0,860px)_420px] xl:items-start xl:justify-center">
+        <div className="mt-4 grid gap-6 md:mt-[26px] xl:grid-cols-[minmax(0,860px)_420px] xl:items-start xl:justify-center">
           <main className="min-w-0">
             <section className="space-y-4">
               <div className="grid grid-cols-[112px_minmax(0,1fr)_112px] items-end gap-3">
